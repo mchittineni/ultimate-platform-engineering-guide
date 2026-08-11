@@ -1,0 +1,202 @@
+{
+  "platform-engineering-fundamentals": {
+    "order": 1,
+    "group": "Platform Foundations",
+    "description": "The vocabulary every platform interview opens with: what a platform actually is, why self-service is the defining property, and where platform engineering sits against DevOps and SRE.",
+    "study_notes": [
+      "Can you define a platform without listing tools?",
+      "The precise boundary between platform engineering, DevOps, and SRE.",
+      "When an organisation should not build a platform at all."
+    ]
+  },
+  "developer-experience": {
+    "order": 2,
+    "group": "Platform Foundations",
+    "description": "The user side of the platform: cognitive load, service catalogues, portals, scorecards, onboarding time, and the metrics that tell you whether developers are actually better off.",
+    "study_notes": [
+      "How you measure developer experience without counting story points.",
+      "Why cognitive load, not tool count, is the design constraint.",
+      "What a scorecard must avoid to survive contact with real teams."
+    ]
+  },
+  "platform-architecture": {
+    "order": 3,
+    "group": "Platform Architecture",
+    "description": "Designing the platform itself: control plane versus data plane, the developer-facing API, escapable abstractions, interface versioning, and build-versus-buy.",
+    "study_notes": [
+      "The developer-facing contract, and what belongs in it versus behind it.",
+      "How you version a platform interface and migrate consumers for them.",
+      "Why leak-proof abstractions turn the platform team into a bottleneck."
+    ]
+  },
+  "multi-tenancy-and-isolation": {
+    "order": 4,
+    "group": "Platform Architecture",
+    "description": "Sharing infrastructure without sharing blast radius: tenancy models, namespace versus cluster boundaries, noisy neighbours, quotas, network isolation, and per-tenant accounting.",
+    "study_notes": [
+      "Which isolation boundary a given threat model actually requires.",
+      "Why a Kubernetes namespace is a soft boundary, and what hardens it.",
+      "How you offboard a tenant completely, including its data and cost trail."
+    ]
+  },
+  "kubernetes-platform": {
+    "order": 5,
+    "group": "Kubernetes and Control Planes",
+    "description": "Kubernetes as the substrate: cluster topology, node pools and scheduling, fleet upgrades, admission control as a platform lever, operators, and service mesh.",
+    "study_notes": [
+      "Cluster-per-what - the topology decision and its cost.",
+      "How you upgrade a fleet without breaking tenant workloads.",
+      "When a controller or operator is the right answer, and when it is not."
+    ]
+  },
+  "control-planes-and-abstractions": {
+    "order": 6,
+    "group": "Kubernetes and Control Planes",
+    "description": "Turning infrastructure into a self-service API: Crossplane, custom resources as platform contracts, workload specifications, Terraform at scale, and safe resource lifecycle.",
+    "study_notes": [
+      "Control-plane reconciliation versus run-to-completion IaC.",
+      "How you expose infrastructure without handing out cloud credentials.",
+      "What protects a stateful resource from an accidental delete."
+    ]
+  },
+  "gitops-and-continuous-delivery": {
+    "order": 7,
+    "group": "Delivery and Progressive Rollout",
+    "description": "Git as the source of truth: Argo CD and Flux, repository structure at scale, environment promotion, secrets, drift detection, and self-service pipelines that do not multiply.",
+    "study_notes": [
+      "What GitOps actually guarantees, and what it does not.",
+      "How a change is promoted between environments without copy-paste.",
+      "Where secrets live when the desired state is in a public-ish repo."
+    ]
+  },
+  "progressive-delivery-and-feature-flags": {
+    "order": 8,
+    "group": "Delivery and Progressive Rollout",
+    "description": "Separating deploy from release: flags as a platform capability, flag debt and its SLAs, rollout curves with abort criteria, trustworthy kill switches, and consistent bucketing.",
+    "study_notes": [
+      "Deploy versus release, and which risk each one controls.",
+      "The abort threshold and hold time for every rollout phase, set before it starts.",
+      "What a flag flip cannot undo - state, not behaviour."
+    ]
+  },
+  "environments-and-ephemeral-infrastructure": {
+    "order": 9,
+    "group": "Delivery and Progressive Rollout",
+    "description": "Environments on demand: preview environments per pull request, data seeding without leaking production, environment parity, cost control, and the inner development loop.",
+    "study_notes": [
+      "What a preview environment must include to be trusted.",
+      "How you seed realistic data without copying real customer records.",
+      "Which dimensions of environment parity actually matter."
+    ]
+  },
+  "platform-security": {
+    "order": 10,
+    "group": "Security and Governance",
+    "description": "Security as a platform default: workload identity without long-lived keys, secretless pipelines, secrets management, supply-chain provenance, base image currency, and break-glass access.",
+    "study_notes": [
+      "How a workload proves who it is without a stored credential.",
+      "The supply-chain chain of custody from commit to running container.",
+      "How you patch every service at once when a critical CVE lands."
+    ]
+  },
+  "policy-as-code-and-governance": {
+    "order": 11,
+    "group": "Security and Governance",
+    "description": "Guardrails that are code: OPA and Kyverno, rolling out policy without breaking teams, compliance frameworks mapped to enforceable controls, exception handling, and audit trails.",
+    "study_notes": [
+      "Guardrail versus gate, and where each belongs in the flow.",
+      "How you introduce a policy that would currently fail production.",
+      "Turning a SOC 2 or PCI control into something a machine checks."
+    ]
+  },
+  "aws-platform-engineering": {
+    "order": 12,
+    "group": "Cloud Platforms",
+    "description": "Building a platform on AWS: multi-account organisation design, account vending, EKS pod identity, runtime selection, Karpenter capacity, paved-road self-service, and cost allocation.",
+    "study_notes": [
+      "Why the account is the primary isolation boundary on AWS.",
+      "How a pod gets AWS permissions without an access key.",
+      "The runtime decision between ECS, EKS, Lambda, and App Runner."
+    ]
+  },
+  "azure-platform-engineering": {
+    "order": 13,
+    "group": "Cloud Platforms",
+    "description": "Building a platform on Azure: management groups and landing zones, Azure Policy guardrails, AKS workload identity, runtime selection, Bicep modules, and private networking for PaaS.",
+    "study_notes": [
+      "The management group / subscription / resource group hierarchy and what each buys.",
+      "Azure Policy as the enforcement point rather than a reporting tool.",
+      "When Container Apps beats AKS, and why that is usually the right default."
+    ]
+  },
+  "gcp-platform-engineering": {
+    "order": 14,
+    "group": "Cloud Platforms",
+    "description": "Building a platform on GCP: the folder and project hierarchy, organisation policies, Workload Identity Federation, GKE versus Cloud Run, Shared VPC, and Config Connector.",
+    "study_notes": [
+      "Why the project is the unit of isolation and billing on GCP.",
+      "How Workload Identity Federation eliminates service account keys.",
+      "Shared VPC and the host/service project split."
+    ]
+  },
+  "multi-cloud-and-hybrid-platforms": {
+    "order": 15,
+    "group": "Cloud Platforms",
+    "description": "When more than one cloud is real: genuine drivers versus slogans, the cost of portable abstractions, cross-provider primitive mapping, hybrid designs, and data gravity.",
+    "study_notes": [
+      "The business or compliance driver that justifies a second cloud.",
+      "What you give up by abstracting over managed services.",
+      "Why egress and data gravity decide most of these arguments."
+    ]
+  },
+  "platform-reliability": {
+    "order": 16,
+    "group": "Reliability and Observability",
+    "description": "Keeping the platform up: SLOs for a platform rather than an app, error budget policy, platform on-call, incidents where the platform is the incident, graceful degradation, and DR.",
+    "study_notes": [
+      "What you can promise when your users are other engineers.",
+      "How the platform keeps serving traffic while its control plane is down.",
+      "Recovering the platform when the tooling you would use is also gone."
+    ]
+  },
+  "platform-observability": {
+    "order": 17,
+    "group": "Reliability and Observability",
+    "description": "Telemetry as a platform capability: OpenTelemetry collectors as shared infrastructure, cardinality and cost control, zero-effort instrumentation, cross-tenant tracing, and adoption signals.",
+    "study_notes": [
+      "What a service should get for free, with no instrumentation work.",
+      "Where observability cost comes from, and which lever actually cuts it.",
+      "Measuring platform usage from the telemetry you already collect."
+    ]
+  },
+  "platform-finops": {
+    "order": 18,
+    "group": "Economics and Operating Model",
+    "description": "The money side of the platform: cost attribution for shared infrastructure, showback versus chargeback, unit economics, commitment and spot strategy, and idle spend.",
+    "study_notes": [
+      "How you attribute a shared control plane or NAT gateway fairly.",
+      "Why showback usually changes behaviour and chargeback often does not.",
+      "Cost per unit of business value, not cost per month."
+    ]
+  },
+  "platform-team-and-operating-model": {
+    "order": 19,
+    "group": "Economics and Operating Model",
+    "description": "Running the team: Team Topologies, staffing, adoption metrics, migration without a mandate, deprecation, the RFC process, and a roadmap that can say no.",
+    "study_notes": [
+      "Platform team as an enabling team, not a ticket queue.",
+      "Adoption as the success metric, and what it must be adjusted for.",
+      "How you deprecate something teams still depend on."
+    ]
+  },
+  "platform-engineering-interviews": {
+    "order": 20,
+    "group": "Interview Prep",
+    "description": "How the interview itself works: the loop structure, the platform design round, presenting your own platform work, troubleshooting rounds, behavioural themes, and what to ask back.",
+    "study_notes": [
+      "The platform design round is about the interface and the users, not the diagram.",
+      "How to tell a platform story with an outcome rather than a tool list.",
+      "The questions that reveal whether their platform is real."
+    ]
+  }
+}
