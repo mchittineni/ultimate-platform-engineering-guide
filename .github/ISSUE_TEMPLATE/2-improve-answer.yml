@@ -1,0 +1,59 @@
+name: 📝 Improve an existing answer
+description: A correction, a missing trade-off, or an answer that has gone stale.
+title: "[improve] "
+labels: ["improve-answer"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Corrections are the most valuable contribution to this repository. Platform tooling moves quickly and answers go stale - a renamed API, a deprecated resource, a default that changed.
+
+  - type: input
+    id: file
+    attributes:
+      label: Which file?
+      description: The path to the answer, so it can be found without searching.
+      placeholder: control-planes-and-abstractions/what-is-crossplane-and-how-does-it-differ-from-terraform.md
+    validations:
+      required: true
+
+  - type: dropdown
+    id: kind
+    attributes:
+      label: What kind of problem is it?
+      options:
+        - Factually wrong
+        - Out of date (API, flag, or default has changed)
+        - Example does not work
+        - Missing an important trade-off or limitation
+        - Misleading, though not strictly wrong
+        - Unclear or hard to follow
+        - Missing the follow-up question an interviewer would actually ask
+    validations:
+      required: true
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: What is wrong?
+      description: Quote the sentence or block if you can, so there is no ambiguity about what you are referring to.
+      placeholder: |
+        The answer says a Crossplane claim is deleted with the composite resource. Since v1.x the deletion behaviour depends on the composite delete policy, so the example leaks resources.
+    validations:
+      required: true
+
+  - type: textarea
+    id: correction
+    attributes:
+      label: What should it say instead?
+      description: A suggested wording, a working command, or a link to the authoritative source. A link to vendor documentation is the strongest evidence.
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Before submitting
+      options:
+        - label: I checked that this is the current behaviour, not a version-specific difference already noted in the answer.
+          required: true

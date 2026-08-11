@@ -1,0 +1,94 @@
+name: 🆕 New question
+description: Suggest a platform engineering interview question this guide does not answer yet.
+title: "[question] "
+labels: ["new-question"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for improving the guide. Before filing, please search the repository for the question - most topics already cover the common phrasings, and the answer may exist under a different wording.
+
+        If you already have the answer written, you can skip this and open a pull request directly; see [CONTRIBUTING.md](https://github.com/mchittineni/ultimate-platform-engineering-guide/blob/main/CONTRIBUTING.md).
+
+  - type: input
+    id: question
+    attributes:
+      label: The question
+      description: Phrase it the way an interviewer would ask it. Question files are titled as questions, so this becomes the title of the answer.
+      placeholder: How do you stop a self-service platform from becoming a shadow ticket queue?
+    validations:
+      required: true
+
+  - type: dropdown
+    id: topic
+    attributes:
+      label: Which topic does it belong to?
+      description: The directory the answer should live in. Pick the closest match - a maintainer will confirm.
+      options:
+        - aws-platform-engineering
+        - azure-platform-engineering
+        - control-planes-and-abstractions
+        - developer-experience
+        - environments-and-ephemeral-infrastructure
+        - gcp-platform-engineering
+        - gitops-and-continuous-delivery
+        - kubernetes-platform
+        - multi-cloud-and-hybrid-platforms
+        - multi-tenancy-and-isolation
+        - platform-architecture
+        - platform-engineering-fundamentals
+        - platform-engineering-interviews
+        - platform-finops
+        - platform-observability
+        - platform-reliability
+        - platform-security
+        - platform-team-and-operating-model
+        - policy-as-code-and-governance
+        - progressive-delivery-and-feature-flags
+        - "Not sure / needs a new topic"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: difficulty
+    attributes:
+      label: Difficulty
+      description: Roughly the level of candidate this is asked of.
+      options:
+        - Beginner
+        - Intermediate
+        - Advanced
+    validations:
+      required: true
+
+  - type: textarea
+    id: why
+    attributes:
+      label: Why is it worth adding?
+      description: Where you have seen it asked, how often, and what the existing answers do not cover. "Asked in three of my last five interviews" is the strongest case.
+      placeholder: |
+        Asked in two recent staff platform screens. The existing golden path answer covers what one is but not what to do when teams route around it.
+    validations:
+      required: true
+
+  - type: textarea
+    id: draft
+    attributes:
+      label: Draft answer (optional)
+      description: Even rough bullets help. Mechanism, one trade-off, and a manifest or command is enough to work from.
+      placeholder: |
+        - Measure where the escape hatches are actually used - that is the product feedback
+        - Fix the golden path rather than closing the hatch
+        - Escape hatch with a deadline and an owner, not an indefinite exemption
+    validations:
+      required: false
+
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Before submitting
+      options:
+        - label: I searched the repository and this question is not already answered under a different wording.
+          required: true
+        - label: This is a technical question, not content covered by an NDA or a take-home assignment.
+          required: true

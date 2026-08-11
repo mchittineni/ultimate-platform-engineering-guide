@@ -1,0 +1,71 @@
+name: 📁 Propose a new topic
+description: A subject area the 20 existing topics cannot hold.
+title: "[topic] "
+labels: ["new-topic"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        A new topic is a bigger change than a new question: it needs a directory, an entry in `scripts/topic_meta.json` with an order, group, and study notes, a generated README, and enough questions to justify existing. Please check first whether the subject fits an existing topic - a single question about eBPF belongs in Kubernetes Platform, not in a new topic.
+
+  - type: input
+    id: name
+    attributes:
+      label: Proposed topic name
+      description: The display title. The directory slug is derived from it.
+      placeholder: Data Platform Engineering
+    validations:
+      required: true
+
+  - type: textarea
+    id: scope
+    attributes:
+      label: What does it cover, and what does it deliberately not cover?
+      description: The boundary matters more than the name - it is what stops the topic overlapping the neighbouring ones.
+      placeholder: |
+        Covers: self-service data pipelines, dataset contracts, warehouse cost guardrails, lineage as a platform capability.
+        Does not cover: the orchestrators themselves, or observability tooling (Platform Observability).
+    validations:
+      required: true
+
+  - type: textarea
+    id: questions
+    attributes:
+      label: At least five questions it would hold
+      description: A topic with fewer than five real interview questions should be questions inside an existing topic instead.
+      placeholder: |
+        1. What does a data contract look like as a platform-enforced artefact?
+        2. How do you offer self-service pipeline deployment without unbounded warehouse cost?
+        3. How do you attribute warehouse spend to a consuming team?
+        4. How do you version a shared dataset schema?
+        5. What SLOs make sense for a nightly batch pipeline?
+      render: markdown
+    validations:
+      required: true
+
+  - type: textarea
+    id: overlap
+    attributes:
+      label: Which existing topics does it overlap, and why is a split better?
+      description: Name the closest existing topics and explain why the content does not belong there.
+    validations:
+      required: true
+
+  - type: dropdown
+    id: group
+    attributes:
+      label: Which group should it sit in?
+      description: Topics are grouped in the root table of contents. Pick the nearest fit.
+      options:
+        - Platform Foundations
+        - Platform Architecture
+        - Kubernetes and Control Planes
+        - Delivery and Progressive Rollout
+        - Security and Governance
+        - Cloud Platforms
+        - Reliability and Observability
+        - Economics and Operating Model
+        - Interview Prep
+        - Not sure
+    validations:
+      required: false

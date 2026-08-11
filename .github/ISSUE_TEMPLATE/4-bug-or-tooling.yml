@@ -1,0 +1,57 @@
+name: 🔧 Broken link, formatting, or tooling
+description: A broken link, a rendering problem, or a failure in the validation and index scripts.
+title: "[fix] "
+labels: ["tooling"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        For content errors, use the **Improve an existing answer** template instead. This one is for the machinery: broken links, Markdown that renders wrong, and the Python scripts or GitHub Actions workflows.
+
+        If the problem is a security issue in a workflow or a committed credential, **do not file this** - use the [private security report](https://github.com/mchittineni/ultimate-platform-engineering-guide/security/advisories/new) instead.
+
+  - type: dropdown
+    id: kind
+    attributes:
+      label: What kind of problem?
+      options:
+        - Broken link
+        - Markdown renders incorrectly on GitHub
+        - "`validate_content.py` reports an error I cannot explain"
+        - "`generate_indexes.py` produces wrong or unstable output"
+        - Prettier and markdownlint disagree with each other
+        - GitHub Actions workflow failure
+        - Something else
+    validations:
+      required: true
+
+  - type: textarea
+    id: where
+    attributes:
+      label: Where is it?
+      description: File paths, and a link to the failing workflow run if there is one.
+      placeholder: |
+        platform-security/how-do-you-run-a-secretless-ci-cd-pipeline.md - the link to ../policy-as-code-and-governance/ 404s
+    validations:
+      required: true
+
+  - type: textarea
+    id: repro
+    attributes:
+      label: How do you reproduce it?
+      description: The exact command and its output. Both scripts are stdlib-only Python 3.11+, so no environment setup should be needed.
+      placeholder: |
+        $ python3 scripts/validate_content.py
+        1 validation error(s):
+          - platform-security/...md: broken link -> ../policy-as-code-and-governance/README.md
+      render: shell
+    validations:
+      required: false
+
+  - type: input
+    id: python
+    attributes:
+      label: Python version (if a script problem)
+      placeholder: "3.13.1"
+    validations:
+      required: false
