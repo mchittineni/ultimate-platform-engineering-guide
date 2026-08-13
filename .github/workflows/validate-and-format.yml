@@ -15,17 +15,20 @@ concurrency:
 env:
   PYTHON_VERSION: "3.13"
   NODE_VERSION: "24"
+  PRETTIER_VERSION: "3.9.6"
+  MARKDOWNLINT_VERSION: "0.23.2"
 
 jobs:
   validate:
     name: Validate content vault
     runs-on: ubuntu-latest
+
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v5
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
 
       - name: Set up Python
-        uses: actions/setup-python@v6
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
         with:
           python-version: ${{ env.PYTHON_VERSION }}
 
@@ -37,23 +40,34 @@ jobs:
       - name: Fail if indexes are stale
         run: python3 scripts/generate_indexes.py --check
 
+      # The published graph is generated from the questions. If a PR edits
+      # content without rebuilding it, the site silently serves stale data.
+      - name: Fail if the knowledge graph is stale
+        run: |
+          python3 scripts/build_knowledge_graph.py --output docs/index.html
+          git diff --exit-code --stat docs/index.html
+
   lint:
     name: Lint and format Markdown
     runs-on: ubuntu-latest
+
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v5
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
 
       - name: Set up Node.js
-        uses: actions/setup-node@v5
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
           node-version: ${{ env.NODE_VERSION }}
 
+      # Pinned exactly. A floating major means a patch release of either tool can
+      # change formatting rules and fail CI on a branch that touched nothing --
+      # the failure then looks like the contributor's fault.
       - name: Check formatting with Prettier
-        run: npx --yes prettier@3 --check "**/*.md"
+        run: npx --yes prettier@${{ env.PRETTIER_VERSION }} --check "**/*.md"
 
       - name: Lint with markdownlint
-        run: npx --yes markdownlint-cli2 "**/*.md"
+        run: npx --yes markdownlint-cli2@${{ env.MARKDOWNLINT_VERSION }} "**/*.md"
 
   pr-success-comment:
     if: github.event_name == 'pull_request'
@@ -64,10 +78,8 @@ jobs:
       pull-requests: write
 
     steps:
-      # No untrusted input is interpolated here: the comment body is a static
-      # string and every repo/PR reference comes from the `context` object.
       - name: Post success comment on PR
-        uses: actions/github-script@v8
+        uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8.0.0
         with:
           script: |
             const marker = "<!-- validation-success -->";
