@@ -27,21 +27,12 @@ env:
 jobs:
   label:
     name: Sync labels from frontmatter tags
-    # Forks of this repo inherit the workflow but not its label vocabulary; skip there.
     if: github.repository == 'mchittineni/ultimate-platform-engineering-guide'
     runs-on: ubuntu-latest
 
     steps:
-      # This job runs as `pull_request_target`, so it has write access while the
-      # pull request contents are untrusted. Two rules keep that safe:
-      #   1. The workflow never checks out or executes any code from the PR head.
-      #   2. No `${{ }}` expression carrying attacker-controlled text (titles,
-      #      branch names, file contents) is ever interpolated into a `run:` block
-      #      or into this script. Everything untrusted is read at runtime through
-      #      the `context` object and the API, and only ever used as data - tag
-      #      strings are sanitised to `[a-z0-9._-]` before becoming label names.
       - name: Apply labels
-        uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8
+        uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8.0.0
         with:
           script: |
             const { owner, repo } = context.repo;
