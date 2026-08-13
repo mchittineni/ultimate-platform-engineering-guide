@@ -14,7 +14,9 @@ Every answer gives you a short answer you can say out loud, the detail and trade
 ![Difficulty](https://img.shields.io/badge/difficulty-🟢%2011%20·%20🟡%2056%20·%20🔴%2069-lightgrey)
 ![License](https://img.shields.io/badge/license-MIT-green)
 
-[Pick your role](#-pick-your-role) · [Browse topics](#-browse-all-topics) · [All questions](#-all-questions) · [How answers are structured](#-how-answers-are-structured) · [Contributing](./CONTRIBUTING.md)
+[Pick your role](#-pick-your-role) · [Browse topics](#-browse-all-topics) · [All questions](#-all-questions) · [Knowledge graph](#-the-knowledge-graph) · [How answers are structured](#-how-answers-are-structured) · [Contributing](./CONTRIBUTING.md)
+
+**[🌌 Explore the knowledge graph →](https://mchittineni.github.io/ultimate-platform-engineering-guide/)** - all 136 questions as a live map of the concepts they share.
 
 ⭐ Star the project if it helps you land the role.
 
@@ -534,6 +536,33 @@ Difficulty is marked 🟢 Beginner · 🟡 Intermediate · 🔴 Advanced. The di
 
 ---
 
+## 🌌 The knowledge graph
+
+Platform engineering questions do not sit in neat boxes: tenancy decides your isolation boundary, which decides your policy model, which decides what your golden path can promise. The [knowledge graph](https://mchittineni.github.io/ultimate-platform-engineering-guide/) makes those dependencies visible - every question is a node, and two questions are linked when they genuinely argue about the same concept.
+
+The links are **derived, not hand-maintained**. Each answer is scanned for the ~70 concepts this field turns on (control plane, golden path, policy as code, blast radius, error budget, chargeback, …), and a pair is linked when the concepts they share are rare across the vault. Rarity weighting is what stops "kubernetes" linking everything to everything; length normalisation stops the longest answers becoming hubs.
+
+```bash
+python3 scripts/build_knowledge_graph.py --output docs/index.html   # the deployed page
+python3 scripts/build_knowledge_graph.py --stats                    # edge counts, hubs, orphans
+python3 scripts/build_knowledge_graph.py --json docs/graph.json     # the raw graph
+python3 scripts/inject_wikilinks.py                                 # write the same edges into the question files
+```
+
+Three renderings ship with the builder and are selectable with `--prototype`:
+
+| Prototype           | What it is for                                                                                                          |
+| ------------------- | ----------------------------------------------------------------------------------------------------------------------- |
+| **`constellation`** | _(deployed)_ Force-directed map of the whole vault, clustered by theme. Click a question to light up its neighbourhood. |
+| **`atlas`**         | The capability map: groups and topics laid out in reading order, with concept links drawn on demand.                    |
+| **`pathway`**       | Difficulty lanes that generate a study route - the questions to read before the hard one makes sense.                   |
+
+The page is a single self-contained HTML file with no dependencies, deployed to GitHub Pages by [`knowledge-graph.yml`](./.github/workflows/knowledge-graph.yml) on every push to `main`.
+
+`inject_wikilinks.py` writes the same edges into each question's `## Related Questions` block, between `<!-- RELATED:START -->` and `<!-- RELATED:END -->` markers, as both `[[wikilinks]]` (for Obsidian-style vaults) and relative links (for GitHub). It is idempotent, and `--check` fails CI when a block has drifted from the graph.
+
+---
+
 ## 🛠️ Repository structure
 
 ```text
@@ -546,9 +575,14 @@ Difficulty is marked 🟢 Beginner · 🟡 Intermediate · 🔴 Advanced. The di
 │   ├── lib_content.py                   # shared frontmatter/vault parsing
 │   ├── generate_indexes.py              # regenerates all indexes from question files
 │   ├── validate_content.py              # CI validation of the whole vault
+│   ├── build_knowledge_graph.py         # derives the concept graph, renders the HTML site
+│   ├── inject_wikilinks.py              # writes graph edges into `## Related Questions` blocks
 │   └── topic_meta.json                  # topic registry: order, group, description, study notes
+├── docs/
+│   └── index.html                       # generated knowledge graph, deployed to GitHub Pages
 └── .github/workflows/
-    └── validate-and-format.yml          # runs validation + Prettier on every PR
+    ├── validate-and-format.yml          # runs validation + Prettier on every PR
+    └── knowledge-graph.yml              # rebuilds and deploys the graph on push to main
 ```
 
 Directories and filenames carry **no numeric prefixes** - they are pure slugs. Ordering comes from two places instead:
@@ -576,8 +610,10 @@ tags:
 **The indexes are generated, not hand-written.** The question files are the single source of truth; topic READMEs and the tables above are rendered from their frontmatter. After adding or editing a question:
 
 ```bash
-python3 scripts/generate_indexes.py     # rewrite all indexes
-python3 scripts/validate_content.py     # verify frontmatter, naming, links, index freshness
+python3 scripts/generate_indexes.py       # rewrite all indexes
+python3 scripts/inject_wikilinks.py       # refresh the related-questions blocks
+python3 scripts/build_knowledge_graph.py --output docs/index.html   # rebuild the graph page
+python3 scripts/validate_content.py       # verify frontmatter, naming, links, index freshness
 ```
 
 Both are stdlib-only Python 3.11+ - no dependencies to install. CI runs the same commands and fails the pull request on drift.
@@ -594,7 +630,11 @@ Two documents set the ground rules: the [Code of Conduct](./CODE_OF_CONDUCT.md) 
 
 ## 🧭 Related
 
-- **[Ultimate DevOps Guide](https://github.com/mchittineni/ultimate-devops-guide)** - the sibling repository, covering DevOps, SRE, DevSecOps, and cloud engineering interview questions with the same structure and tooling. Start there for container, CI/CD, Linux, and networking fundamentals; this guide assumes them.
+Three sibling repositories, same structure, same tooling - pick the one that matches the role you are interviewing for:
+
+- **[Ultimate DevOps Guide](https://github.com/mchittineni/ultimate-devops-guide)** - DevOps, SRE, DevSecOps, and cloud engineering. Start there for container, CI/CD, Linux, and networking fundamentals; this guide assumes them.
+- **[Ultimate AI Engineering Guide](https://github.com/mchittineni/ultimate-ai-engineering-guide)** - LLM fundamentals, prompt engineering, RAG, agents and MCP, fine-tuning, evaluation, and LLMOps. The counterpart for AI platform and AI engineering loops, where this guide covers the infrastructure the models run on.
+- **Ultimate Platform Engineering Guide** _(you are here)_ - the platform layer between the two: golden paths, control planes, tenancy, and the operating model of a team whose customers are other engineers.
 
 ## 🙏 Acknowledgements
 
