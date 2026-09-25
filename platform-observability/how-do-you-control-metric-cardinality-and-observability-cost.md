@@ -1,6 +1,6 @@
 ---
 title: "How do you control metric cardinality and observability cost?"
-id: 113
+id: 221
 category: "Platform Observability"
 difficulty: "Advanced"
 tags:

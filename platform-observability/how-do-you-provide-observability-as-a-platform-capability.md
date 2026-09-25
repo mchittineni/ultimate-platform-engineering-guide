@@ -1,6 +1,6 @@
 ---
 title: "How do you provide observability as a platform capability?"
-id: 111
+id: 216
 category: "Platform Observability"
 difficulty: "Intermediate"
 tags:
@@ -33,7 +33,7 @@ tags:
 
 **Standardise on OpenTelemetry for instrumentation.** A vendor-neutral API and a collector between your workloads and your backend means the backend is replaceable without touching services - which matters because observability backends are expensive and you will renegotiate or migrate eventually. This is one of the clearest cases where the abstraction is worth having.
 
-**Correlation is what makes the three signals useful together.** A trace ID present in logs and exemplars linking metrics to traces is what lets someone move from "latency is up" to "here is a slow request" to "here is what it logged". Making that correlation automatic - injected by the platform's libraries and sidecars - delivers more practical value than any individual signal.
+**Correlation is what makes the signals useful together.** A trace ID present in logs and exemplars linking metrics to traces is what lets someone move from "latency is up" to "here is a slow request" to "here is what it logged". Making that correlation automatic - injected by the platform's libraries and sidecars - delivers more practical value than any individual signal. Profiles are now a fourth OpenTelemetry signal (public alpha in 2026), and the same rule applies: a CPU profile is most useful when it can be joined to the service, version, and trace that produced it.
 
 **Own the cost, because teams cannot see it.** Observability spend is driven by cardinality, retention, and volume, and a team adding a label with high cardinality has no visibility into the effect. The platform must set limits, attribute spend, and make the cost of a signal visible at the point someone adds it.
 

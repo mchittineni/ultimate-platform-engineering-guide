@@ -1,6 +1,6 @@
 ---
 title: "What telemetry should every service get without writing code?"
-id: 114
+id: 217
 category: "Platform Observability"
 difficulty: "Intermediate"
 tags:
@@ -31,6 +31,8 @@ tags:
 
 **Auto-instrumentation covers more than people expect.** Injecting a language agent - via an operator or an init container - instruments the HTTP server, HTTP and gRPC clients, database drivers, and cache clients. That yields inbound and outbound golden signals plus trace propagation with no code change, which is the large majority of what an on-call engineer needs.
 
+**eBPF instrumentation reaches what an agent cannot.** OpenTelemetry eBPF Instrumentation (OBI, donated from Grafana Beyla) runs as a node-level DaemonSet and observes HTTP, gRPC, and common database protocols at the kernel boundary, producing RED metrics and spans for any process - including compiled languages with no injectable agent and third-party binaries you cannot change. It sees less than an in-process agent (no runtime internals, limited business context) and was still pre-1.0 in 2026, so treat it as a floor for everything rather than a replacement for SDK instrumentation where you have it.
+
 **A mesh gives you the same signals from the network side, uniformly.** Where a mesh is already present it produces consistent request metrics for every service regardless of language, which is particularly valuable in a polyglot estate. Auto-instrumentation and a mesh overlap; the mesh sees the network, the agent sees inside the process. Runtime metrics and database client spans come only from the agent.
 
 **Outbound is as important as inbound and is frequently missed.** Most latency problems are a dependency being slow, and without client-side spans and metrics you can see that your service is slow but not why. Auto-instrumented database and HTTP client calls are often the highest-value signal in the whole set.
@@ -53,17 +55,18 @@ apiVersion: opentelemetry.io/v1alpha1
 kind: Instrumentation
 metadata: { name: platform-default, namespace: observability }
 spec:
-  exporter: { endpoint: http://agent-collector.observability:4317 }
+  # Java agent 2.x and most SDKs default to OTLP over HTTP/protobuf, so port 4318
+  exporter: { endpoint: http://agent-collector.observability:4318 }
   propagators: [tracecontext, baggage] # W3C - the interoperable choice
   sampler: { type: parentbased_traceidratio, argument: "0.1" }
   resource:
     # Platform context - injected, never configured per service
     resourceAttributes:
-      deployment.environment: production
+      deployment.environment.name: production # renamed from deployment.environment
   java:
     env:
       - { name: OTEL_INSTRUMENTATION_JDBC_ENABLED, value: "true" } # outbound SQL
-      - { name: OTEL_INSTRUMENTATION_HTTP_CLIENT_ENABLED, value: "true" } # outbound HTTP
+      - { name: OTEL_INSTRUMENTATION_JAVA_HTTP_CLIENT_ENABLED, value: "true" } # outbound HTTP
       - { name: OTEL_INSTRUMENTATION_RUNTIME_TELEMETRY_ENABLED, value: "true" } # heap, GC
 ---
 apiVersion: apps/v1
@@ -93,7 +96,7 @@ instrumentation involved:
                                          one most often missing)
   "which dependency?"                   client spans: pricing 8ms,
                                         postgres 1,840ms  <-- there it is
-  "what did the slow query do?"         db.statement on the span            ✓
+  "what did the slow query do?"         db.query.text on the span           ✓
   "did something change?"               change annotations on the dashboard:
                                         deploy 1.4.2 at 09:14, flag flip at
                                         13:47                               ✓
@@ -135,7 +138,7 @@ The two things to verify rather than assume:
 - Trace context propagation breaking at queues and thread pools is the specific, real failure. "A broken trace is worse than an absent one" is a good line.
 - Platform-injected resource attributes - tenant, tier, version, cluster - are what make the telemetry filterable and attributable, and they should never be per-service configuration.
 - Change annotations on every dashboard are cheap and answer the first question of nearly every incident. Volunteering this is a strong practical signal.
-- Distinguish auto-instrumentation from the mesh: the mesh sees the network, the agent sees inside the process, and only the agent gives you runtime and database client detail.
+- Distinguish auto-instrumentation from the mesh and from eBPF: the mesh and eBPF see the network and syscalls for any process, the agent sees inside the process, and only the agent gives you runtime detail.
 - Be honest that business meaning cannot be auto-instrumented, and say the platform's job is to make adding it trivial. And measure overhead rather than asserting it is negligible.
 
 ---

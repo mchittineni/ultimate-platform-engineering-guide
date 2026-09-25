@@ -1,6 +1,6 @@
 ---
 title: "How do you run an OpenTelemetry collector as a platform service?"
-id: 112
+id: 220
 category: "Platform Observability"
 difficulty: "Advanced"
 tags:
@@ -34,6 +34,8 @@ Agents must be local because enrichment needs node context and because a short n
 
 **Design the failure behaviour explicitly.** The collector must never take down a workload. That means workloads export asynchronously with a timeout and a bounded queue, agents buffer to disk within a limit, and the gateway sheds load under memory pressure rather than crashing. The failure mode you want is losing telemetry, loudly - not blocking application threads. A blocking exporter with no timeout is a genuine outage cause and is worth game-daying.
 
+**Know where batching is heading.** The `batch` processor still works and is still the common default, but the collector is moving batching into the exporters themselves (`sending_queue` with a `batch` block), which pairs batching with a persistent queue so data survives a restart. For a new gateway, prefer exporter-side batching and queueing; keep the processor where an existing pipeline depends on it.
+
 **Version and roll out like any platform component.** The collector configuration is a fleet-wide artefact; a bad processor configuration can drop all telemetry silently, which is worse than an outage because nobody notices. Stage it, watch export success rates and queue depth, and be able to roll back.
 
 **Monitor the collector with something outside it.** If the pipeline is down, the metrics telling you it is down cannot flow through it. A small independent path for the collector's own health is necessary, and this is a specific instance of the general platform rule about circular dependencies.
@@ -52,8 +54,12 @@ spec:
   mode: daemonset
   config:
     receivers:
-      otlp: { protocols: { grpc: { endpoint: 0.0.0.0:4317 }, http: {} } }
+      # Explicit endpoints: since collector v0.104 the default bind is localhost,
+      # which is unreachable from other pods.
+      otlp: { protocols: { grpc: { endpoint: 0.0.0.0:4317 }, http: { endpoint: 0.0.0.0:4318 } } }
     processors:
+      # Shed load rather than being OOMKilled - first in every pipeline
+      memory_limiter: { check_interval: 1s, limit_percentage: 75, spike_limit_percentage: 20 }
       # Platform-added metadata - NOT the service's responsibility
       k8sattributes:
         extract:
@@ -65,8 +71,6 @@ spec:
         attributes:
           - { key: cluster, value: prod-eu-1, action: upsert }
           - { key: region, value: eu-west-1, action: upsert }
-      # Shed load rather than being OOMKilled
-      memory_limiter: { check_interval: 1s, limit_percentage: 75, spike_limit_percentage: 20 }
       batch: { timeout: 5s, send_batch_size: 8192 }
     exporters:
       # CRITICAL: routes by trace ID so all spans of a trace reach the SAME
@@ -77,8 +81,8 @@ spec:
         resolver: { k8s: { service: gateway-collector.observability } }
     service:
       pipelines:
-        traces: { receivers: [otlp], processors: [k8sattributes, resource, memory_limiter, batch], exporters: [loadbalancing] }
-        metrics: { receivers: [otlp], processors: [k8sattributes, resource, memory_limiter, batch], exporters: [loadbalancing] }
+        traces: { receivers: [otlp], processors: [memory_limiter, k8sattributes, resource, batch], exporters: [loadbalancing] }
+        metrics: { receivers: [otlp], processors: [memory_limiter, k8sattributes, resource, batch], exporters: [loadbalancing] }
 ```
 
 ```yaml
@@ -91,7 +95,7 @@ spec:
   replicas: 6
   config:
     receivers:
-      otlp: { protocols: { grpc: {} } }
+      otlp: { protocols: { grpc: { endpoint: 0.0.0.0:4317 } } }
     processors:
       memory_limiter: { check_interval: 1s, limit_percentage: 80, spike_limit_percentage: 15 }
 
@@ -114,7 +118,7 @@ spec:
         actions:
           - { key: http.request.header.authorization, action: delete }
           - { key: user.email, action: hash }
-          - { key: db.statement, action: delete }
+          - { key: db.query.text, action: delete } # formerly db.statement (renamed in the DB semantic conventions)
 
       # Cardinality guard: drop the label sets that cause bills, loudly
       filter/cardinality:
@@ -136,7 +140,10 @@ spec:
     service:
       telemetry:
         # The collector's own health must NOT flow through itself
-        metrics: { address: 0.0.0.0:8888 } # scraped by an independent path
+        # (readers replaces the deprecated metrics.address setting)
+        metrics:
+          readers:
+            - pull: { exporter: { prometheus: { host: 0.0.0.0, port: 8888 } } }
       pipelines:
         traces:
           receivers: [otlp]
