@@ -1,6 +1,6 @@
 ---
 title: "How do you make traces useful across team boundaries?"
-id: 115
+id: 222
 category: "Platform Observability"
 difficulty: "Advanced"
 tags:
@@ -104,7 +104,7 @@ processors:
   attributes/redact:
     actions:
       - { key: http.request.header.authorization, action: delete }
-      - { key: db.statement, action: delete }
+      - { key: db.query.text, action: delete } # formerly db.statement
       - { key: user.email, action: hash }
 ```
 

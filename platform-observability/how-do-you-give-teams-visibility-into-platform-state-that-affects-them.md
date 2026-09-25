@@ -1,6 +1,6 @@
 ---
 title: "How do you give teams visibility into platform state that affects them?"
-id: 116
+id: 218
 category: "Platform Observability"
 difficulty: "Intermediate"
 tags:
