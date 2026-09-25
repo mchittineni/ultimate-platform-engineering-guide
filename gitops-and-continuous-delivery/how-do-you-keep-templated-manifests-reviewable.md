@@ -1,6 +1,6 @@
 ---
 title: "How do you keep templated manifests reviewable?"
-id: 50
+id: 87
 category: "GitOps and Continuous Delivery"
 difficulty: "Intermediate"
 tags:
@@ -17,7 +17,7 @@ tags:
 
 **Why the template diff is insufficient.** A reviewer sees `replicaCount: 3` becoming `replicaCount: 6` and approves. What actually changed might also include a new pod anti-affinity rule because the chart's logic branches on replica count, a different resource request from a conditional, and a changed disruption budget. Bumping a shared chart version from 3.1.0 to 3.2.0 is the extreme case: one line in the diff, potentially hundreds of lines of change to real objects across dozens of services.
 
-**The rendered-manifests pattern.** Render templates in CI and commit the output to a separate branch or directory, which is what the reconciler consumes. Consequences: the review artefact is the real Kubernetes objects; no templating happens at deploy time so there is no chance of rendering differently in production; policy and schema validation run against the actual output; and rollback is reverting to a previous rendered state. The costs are a generated artefact in version control, a rendering step to maintain, and larger diffs - which is the point, not a drawback.
+**The rendered-manifests pattern.** Render templates in CI and commit the output to a separate branch or directory, which is what the reconciler consumes. Consequences: the review artefact is the real Kubernetes objects; no templating happens at deploy time so there is no chance of rendering differently in production; policy and schema validation run against the actual output; and rollback is reverting to a previous rendered state. The costs are a generated artefact in version control, a rendering step to maintain, and larger diffs - which is the point, not a drawback. Argo CD now productises this pattern as the source hydrator: it renders an Application's dry source and commits the hydrated manifests to a separate branch, which the Application then syncs from.
 
 **If you do not commit rendered output, at minimum post the diff.** A CI job that renders both the base and the head of the pull request and comments the difference gives you the review benefit without the committed artefact. It is weaker - production still renders at deploy time, so the possibility of divergence remains - but it is far better than reviewing template changes blind.
 
@@ -84,7 +84,7 @@ jobs:
 
       - name: Validate the rendered output, not the template
         run: |
-          kubeconform -strict -kubernetes-version 1.32.0 /tmp/rendered-head
+          kubeconform -strict -kubernetes-version 1.34.0 /tmp/rendered-head
           kyverno apply policies/ --resource /tmp/rendered-head
           pluto detect-files -d /tmp/rendered-head   # removed/deprecated APIs
 

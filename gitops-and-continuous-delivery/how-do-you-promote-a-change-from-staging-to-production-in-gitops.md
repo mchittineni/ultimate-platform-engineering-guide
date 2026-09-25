@@ -1,6 +1,6 @@
 ---
 title: "How do you promote a change from staging to production in GitOps?"
-id: 47
+id: 90
 category: "GitOps and Continuous Delivery"
 difficulty: "Advanced"
 tags:
@@ -21,7 +21,7 @@ tags:
 
 **Configuration must be promoted too, and it is the part people get wrong.** If staging renders a Helm chart with staging values and production renders the same chart with production values, you tested a different manifest than you deployed - a changed chart default or a template condition can differ. The strong form is to render manifests once, commit the rendered output per environment, and promote the rendered artefact. Then the diff between environments is fully visible and there is no hidden templating step at deploy time.
 
-**Automate the promotion pull request and attach the evidence.** A bot should open the production change with what is being promoted, how long it soaked in staging, the SLO status during that window, the test and scan results, and the diff. That converts an approval from an act of faith into a review of evidence, and it makes the audit trail a by-product.
+**Automate the promotion pull request and attach the evidence.** A bot should open the production change with what is being promoted, how long it soaked in staging, the SLO status during that window, the test and scan results, and the diff. That converts an approval from an act of faith into a review of evidence, and it makes the audit trail a by-product. You no longer have to build this bot from scratch: Kargo (open source, from Akuity) models stages and promotion of "freight" - image digests plus the config commits that go with them - on top of Argo CD, and Argo CD's source hydrator can write rendered manifests to an intermediate branch that you promote to the sync branch by pull request.
 
 **Gate on evidence, not on elapsed time alone.** Useful gates: staging soak duration, no SLO burn during the soak, integration tests green against staging, no new critical vulnerabilities in the image, and the change window if one applies. Time-only gates give the appearance of caution without the substance.
 

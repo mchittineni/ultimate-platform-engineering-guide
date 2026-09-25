@@ -1,6 +1,6 @@
 ---
 title: "How do you handle secrets in a GitOps workflow?"
-id: 48
+id: 85
 category: "GitOps and Continuous Delivery"
 difficulty: "Intermediate"
 tags:
@@ -28,7 +28,7 @@ tags:
 
 **The best case is that the secret never exists as an authored artefact.** When the platform provisions a database, it can generate the credential and write it straight into a Kubernetes secret, with the connection details referenced from the workload spec. Nobody types a password, nobody stores one, and rotation is a controller action. Any secret a human never sees is a secret that cannot leak through a human.
 
-**Better still, eliminate the secret entirely where you can.** Cloud access should use workload identity federation rather than a stored key. Database access can often use IAM authentication or short-lived certificates. The strongest version of this answer starts by asking which secrets do not need to exist, and only then how to deliver the ones that do.
+**Better still, eliminate the secret entirely where you can.** Cloud access should use workload identity rather than a stored key - EKS Pod Identity, Microsoft Entra Workload ID, or Workload Identity Federation for GKE. Database access can often use IAM authentication or short-lived certificates. The strongest version of this answer starts by asking which secrets do not need to exist, and only then how to deliver the ones that do.
 
 **Prefer mounting over environment variables** for sensitive values. Environment variables leak into crash dumps, process listings, and logging of the process environment, and cannot be refreshed without a restart. A mounted volume, particularly via a CSI driver that fetches directly from the store, can be updated in place and never becomes a Kubernetes secret object at all.
 
@@ -40,7 +40,8 @@ tags:
 
 ```yaml
 # The reference model. Git contains a path - nothing sensitive.
-apiVersion: external-secrets.io/v1beta1
+# external-secrets.io/v1 - v1beta1 was removed in External Secrets Operator 0.17.
+apiVersion: external-secrets.io/v1
 kind: ExternalSecret
 metadata: { name: checkout-stripe, namespace: team-payments }
 spec:
@@ -59,7 +60,7 @@ spec:
 ```yaml
 # The store's own authentication - workload identity, not a stored key.
 # This is the bootstrap problem solved properly.
-apiVersion: external-secrets.io/v1beta1
+apiVersion: external-secrets.io/v1
 kind: SecretStore
 metadata: { name: platform-store, namespace: team-payments }
 spec:
@@ -85,13 +86,14 @@ spec:
   writeConnectionSecretToRef: { name: checkout-db-conn }
 ---
 # Best: no secret at all. Workload identity to the cloud; IAM auth to the database.
+# On EKS, prefer Pod Identity for new workloads: the role is bound to this service
+# account with an EKS Pod Identity association (API or IaC), so nothing sensitive
+# or account-specific lives on the object. IRSA's role-arn annotation still works.
 apiVersion: v1
 kind: ServiceAccount
 metadata:
   name: checkout
   namespace: team-payments
-  annotations:
-    eks.amazonaws.com/role-arn: arn:aws:iam::<account-id>:role/team-payments-checkout
 ```
 
 ```yaml

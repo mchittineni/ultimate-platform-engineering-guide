@@ -1,6 +1,6 @@
 ---
 title: "How do you structure repositories for GitOps at scale?"
-id: 46
+id: 89
 category: "GitOps and Continuous Delivery"
 difficulty: "Advanced"
 tags:
@@ -103,6 +103,8 @@ apiVersion: argoproj.io/v1alpha1
 kind: ApplicationSet
 metadata: { name: team-payments-production, namespace: argocd }
 spec:
+  goTemplate: true # Go templates; the older {{path}} syntax cannot fail on a missing key
+  goTemplateOptions: ["missingkey=error"]
   generators:
     - git:
         repoURL: https://github.com/example/team-payments-deploy
@@ -110,13 +112,13 @@ spec:
         directories:
           - path: envs/production/services/* # one Application per service
   template:
-    metadata: { name: "prod-{{path.basename}}" }
+    metadata: { name: "prod-{{.path.basename}}" }
     spec:
       project: team-payments
       source:
         repoURL: https://github.com/example/team-payments-deploy
         targetRevision: v2026.08.11
-        path: "{{path}}"
+        path: "{{.path.path}}"
       destination: { server: https://prod-eu-1.example.internal, namespace: team-payments }
       syncPolicy:
         automated: { selfHeal: true, prune: true }

@@ -1,6 +1,6 @@
 ---
 title: "How do you give teams self-service pipelines without maintaining 200 of them?"
-id: 51
+id: 91
 category: "GitOps and Continuous Delivery"
 difficulty: "Advanced"
 tags:
