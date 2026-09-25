@@ -1,6 +1,6 @@
 ---
 title: "How do you roll out a new policy without breaking every team?"
-id: 76
+id: 143
 category: "Policy as Code and Governance"
 difficulty: "Advanced"
 tags:
@@ -15,7 +15,7 @@ tags:
 
 ## Detail
 
-**Measure before you enforce.** The first question is how many resources violate the policy today, and the answer is frequently much larger than expected. Audit mode evaluates without rejecting and gives you that number plus the specific list, which converts the rollout from a hope into a plan with known work in it.
+**Measure before you enforce.** The first question is how many resources violate the policy today, and the answer is frequently much larger than expected. Audit mode evaluates without rejecting and gives you that number plus the specific list, which converts the rollout from a hope into a plan with known work in it. Admission-time audit only sees changes, so pair it with a background scan of existing resources to get the full count. See [audit mode versus enforce mode](./what-is-the-difference-between-audit-mode-and-enforce-mode-for-a-policy.md).
 
 **Fix what you can without asking anyone.** For a large share of policies the violation is mechanical - a missing label, an absent resource request, no security context - and the platform can either mutate the resource at admission or raise the pull request itself. Doing this first collapses the violation count and means enforcement, when it arrives, affects very few teams. The ratio of violations you fix to violations you assign is what determines how the rollout is received.
 
@@ -23,9 +23,11 @@ tags:
 
 **Enforce for new resources before existing ones.** Applying the policy on create, while existing resources are still exempt, stops the problem growing while you work through the backlog. It also gives you a period where the policy's error messages are being exercised by real users, which is when you discover they are unclear.
 
+**Use warn as the step between audit and enforce.** Native ValidatingAdmissionPolicy bindings and Kyverno's CEL policies accept `validationActions: [Warn, Audit]` (Gatekeeper uses `enforcementAction: warn`): the change succeeds, but the developer sees the violation in their own `kubectl` or pipeline output. It is per-team communication that costs nothing to send.
+
 **Wave the rollout the way you would any fleet change.** Dev, then staging, then low-tier production, then everything - with a soak between waves. Each wave surfaces a different class of violation, and the earlier waves are where you find that your policy has a false positive.
 
-**Communicate specifically, per team, with the fix attached.** "We are enforcing resource requests next month" produces nothing. "Your service `reporting-api` has no memory request; here is pull request #482 which adds it; this becomes enforced on 12 September" produces action. Aggregate announcements are for awareness; per-team specifics are for change.
+**Communicate specifically, per team, with the fix attached.** "We are enforcing resource requests next month" produces nothing. "Your service `reporting-api` has no memory request; here is pull request #482 which adds it; this becomes enforced on 15 January" produces action. Aggregate announcements are for awareness; per-team specifics are for change.
 
 **Have an abort condition.** If enforcement starts rejecting things you did not predict, you need a fast way back to audit mode, and it should be as easy as any other rollback. A policy rollout is a production change with cluster-wide reach.
 
@@ -56,9 +58,9 @@ WEEK 2 - FIX WITHOUT ASKING (mutation + automated PRs)
 
 WEEK 3 - GRANDFATHER THE REMAINDER, WITH EXPIRY
   11 exemptions created, each with an owner and a date:
-      6 x waiting on team capacity          expires 2026-09-12
+      6 x waiting on team capacity          expires 2027-01-15
       3 x genuinely need higher limits,
-          budget approval in progress       expires 2026-09-30
+          budget approval in progress       expires 2027-01-29
       2 x FALSE POSITIVES - system DaemonSets that cannot carry requests
           in the way the policy expects     -> POLICY BUG. Match rules
                                                narrowed to exclude kube-system.
@@ -80,39 +82,47 @@ WEEK 8 - ENFORCED EVERYWHERE
 ```
 
 ```yaml
-# Enforce on create, audit on update: stops growth while the backlog is worked.
-apiVersion: kyverno.io/v1
-kind: ClusterPolicy
+# Enforce on create; existing resources stay in the background audit. Stops
+# growth while the backlog is worked. Kyverno CEL policy type
+# (policies.kyverno.io/v1); the legacy ClusterPolicy format is deprecated.
+apiVersion: policies.kyverno.io/v1
+kind: ValidatingPolicy
 metadata:
   name: require-resource-requests
   annotations:
     platform.example.com/rollout-phase: "new-resources-only"
-    platform.example.com/enforce-existing-from: "2026-09-12"
+    platform.example.com/enforce-existing-from: "2027-01-15"
 spec:
-  validationFailureAction: Enforce
-  rules:
-    - name: requests-on-create
-      match:
-        any: [{ resources: { kinds: [Pod], operations: [CREATE], namespaces: ["team-*"] } }]
-      exclude:
-        # The narrowed match after the false positives were found in week 3
-        any: [{ resources: { namespaces: ["kube-system", "platform-*"] } }]
-        # Grandfathered resources, by explicit annotation with an expiry that
-        # the exemption controller enforces
-        - resources:
-            annotations:
-              platform.example.com/policy-exemption: "require-resource-requests"
-      validate:
-        message: >-
-          Container has no cpu/memory request, so it runs as BestEffort and is
-          evicted first under node pressure. The platform's LimitRange normally
-          supplies defaults - if you are seeing this, your namespace overrides it.
-          Set `resources.requests`. See go/platform-resources.
-        pattern:
-          spec:
-            containers:
-              - resources:
-                  requests: { memory: "?*", cpu: "?*" }
+  validationActions: [Deny]
+  matchConstraints:
+    resourceRules:
+      - apiGroups: [""]
+        apiVersions: ["v1"]
+        # CREATE only: updates to existing workloads are not evaluated yet, and
+        # the background scan keeps counting them.
+        operations: ["CREATE"]
+        resources: ["pods"]
+  matchConditions:
+    # The narrowed match after the false positives were found in week 3:
+    # tenant namespaces only, so kube-system and platform-* are out of scope.
+    - name: tenant-namespaces-only
+      expression: "request.namespace.startsWith('team-')"
+    # Grandfathered resources, by explicit annotation with an expiry that the
+    # exemption controller enforces
+    - name: not-grandfathered
+      expression: >-
+        object.metadata.?annotations[?'platform.example.com/policy-exemption']
+        .orValue('') != 'require-resource-requests'
+  validations:
+    - expression: >-
+        object.spec.containers.all(c,
+          has(c.resources) && has(c.resources.requests) &&
+          'cpu' in c.resources.requests && 'memory' in c.resources.requests)
+      message: >-
+        Container has no cpu/memory request, so it runs as BestEffort and is
+        evicted first under node pressure. The platform's LimitRange normally
+        supplies defaults - if you are seeing this, your namespace overrides it.
+        Set `resources.requests`. See go/platform-resources.
 ```
 
 ## Interview tips
@@ -122,6 +132,7 @@ spec:
 - Enforce on create before enforcing on update is a specific, clever step that stops the backlog growing while you work it, and most candidates do not mention it.
 - Grandfathering must have expiry dates, or the resources that most needed the policy are permanently exempt.
 - Treating the last few violations as probable policy bugs rather than team failures is the senior instinct, and the system DaemonSet example makes it concrete.
+- Mention warn as the step between audit and enforce: it tells each developer directly at apply time without blocking them.
 - Mention an abort condition and a fast route back to audit mode. A policy rollout is a cluster-wide production change and deserves the same rollback thinking.
 
 ---

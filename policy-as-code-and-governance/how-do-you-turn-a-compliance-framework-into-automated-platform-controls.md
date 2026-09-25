@@ -1,6 +1,6 @@
 ---
 title: "How do you turn a compliance framework into automated platform controls?"
-id: 77
+id: 144
 category: "Policy as Code and Governance"
 difficulty: "Advanced"
 tags:
@@ -17,7 +17,7 @@ tags:
 
 **Start by translating, not by building.** A control such as SOC 2 CC6.1 on logical access, or PCI DSS requirements on encryption in transit, is written to be technology-neutral. Your job is to state what would satisfy it in your environment - "every workload authenticates with a federated short-lived identity; no static credentials exist; access is scoped per tenant" - and then check that assertion continuously. Most of these assertions describe things a well-run platform already does.
 
-**Frameworks overlap heavily, so map once and reuse.** SOC 2 and ISO 27001 share the large majority of their substance; GDPR's technical measures overlap both; PCI adds specific requirements on top. Maintain one internal control set mapped to multiple frameworks rather than a separate programme per framework - otherwise you implement the same encryption control three times with three different pieces of evidence.
+**Frameworks overlap heavily, so map once and reuse.** SOC 2 and ISO 27001 share the large majority of their substance; GDPR's technical measures overlap both; PCI adds specific requirements on top. Maintain one internal control set mapped to multiple frameworks rather than a separate programme per framework - otherwise you implement the same encryption control three times with three different pieces of evidence. Newer EU regulations join the same map rather than starting new programmes: DORA (applying to financial entities since 17 January 2025), NIS2, and the Cyber Resilience Act, whose vulnerability and incident reporting obligations apply from 11 September 2026, mostly add incident reporting, third-party risk, and SBOM and vulnerability-handling requirements on top of controls the platform already has. See [which frameworks platform teams meet most often](./which-compliance-frameworks-do-platform-teams-meet-most-often.md).
 
 **Implement where it cannot be bypassed.** A control satisfied by a pipeline step is satisfied only for things that went through the pipeline. Admission control, provisioning composition defaults, and cloud organisation policy are the durable enforcement points - and the strongest position is that a non-compliant state is not expressible: if the platform's interface has no field for public access, no team can create a public bucket.
 

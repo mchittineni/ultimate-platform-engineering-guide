@@ -1,6 +1,6 @@
 ---
 title: "What is policy as code and where does it belong in a platform?"
-id: 74
+id: 138
 category: "Policy as Code and Governance"
 difficulty: "Intermediate"
 tags:
@@ -30,11 +30,13 @@ tags:
 
 **Continuous audit covers what enforcement cannot.** Admission only sees new and updated objects. Everything created before the policy existed, and anything that drifted, needs a scheduled evaluation of live state. Without it, "the policy is enforced" is true only of recent changes.
 
-**Guardrail versus gate is the design distinction worth naming.** A guardrail prevents a bad state - it applies automatically and does not require anyone to decide. A gate stops progress until someone acts. Prefer guardrails: mutate the workload to add the missing security context rather than rejecting it. Reserve rejection for things you genuinely cannot fix automatically, and reserve human gates for the small set of decisions that need judgement.
+**Guardrail versus gate is the design distinction worth naming.** A guardrail prevents a bad state - it applies automatically and does not require anyone to decide. A gate stops progress until someone acts. Prefer guardrails: mutate the workload to add the missing security context rather than rejecting it. Reserve rejection for things you genuinely cannot fix automatically, and reserve human gates for the small set of decisions that need judgement. See [guardrails versus gates](./what-is-a-guardrail-and-how-does-it-differ-from-a-gate.md).
 
 **Policies are code and need the discipline of code.** Version control, review, unit tests with allowed and denied fixtures, and staged rollout. An untested policy is a production change with cluster-wide reach, and a policy that rejects a valid manifest is an outage of your deployment path.
 
 **The error message is part of the policy.** "Denied by policy require-resources" produces a support ticket. "Container `api` has no memory request, so it runs as BestEffort and is evicted first under pressure - add `resources.requests.memory` (the platform default is 128Mi)" produces a fix. Insisting on this is one of the highest-return, lowest-effort practices available.
+
+**The Kubernetes tooling has converged on CEL.** Native ValidatingAdmissionPolicy (GA in 1.30) and MutatingAdmissionPolicy (GA in 1.36) run CEL rules inside the API server with no webhook. Kyverno's current policy types use the same language (its older `ClusterPolicy` format was deprecated in 1.19), and OPA 1.0 made Rego v1 the default for everything beyond Kubernetes. Whichever engine you pick, the three enforcement points and the disciplines below are the same.
 
 **Keep policy about properties the platform can assert.** Encryption, ownership labels, image provenance, resource requests, no public exposure. Policies encoding taste - naming conventions beyond what tooling needs, preferred libraries - generate friction disproportionate to their value.
 
@@ -43,8 +45,9 @@ tags:
 ```yaml
 # One policy, evaluated at three points. The same bundle in CI and at admission
 # means a CI pass reliably predicts the admission decision.
-apiVersion: kyverno.io/v1
-kind: ClusterPolicy
+# Kyverno CEL policy type (policies.kyverno.io/v1, Kyverno 1.17+).
+apiVersion: policies.kyverno.io/v1
+kind: ValidatingPolicy
 metadata:
   name: require-owner-label
   annotations:
@@ -52,47 +55,67 @@ metadata:
       Every workload maps to a team that exists, so alerts route, costs
       attribute, and CVE response has someone to contact.
 spec:
-  validationFailureAction: Enforce
-  background: true # ALSO evaluate existing resources - the continuous audit
-  rules:
-    - name: owner-label-present
-      match:
-        any: [{ resources: { kinds: [Deployment, StatefulSet, CronJob] } }]
-      validate:
-        # The message is part of the policy: it names the field and the fix.
-        message: >-
-          Missing `platform.example.com/owner`. Alerts cannot be routed and cost
-          cannot be attributed without it. Set it to your team's group, e.g.
-          `group:team-payments`. The golden path scaffold adds this for you.
-        pattern:
-          metadata:
-            labels:
-              platform.example.com/owner: "group:team-*"
+  validationActions: [Deny]
+  evaluation:
+    background:
+      enabled: true # ALSO evaluate existing resources - the continuous audit
+  matchConstraints:
+    resourceRules:
+      - apiGroups: ["apps"]
+        apiVersions: ["v1"]
+        operations: ["CREATE", "UPDATE"]
+        resources: ["deployments", "statefulsets"]
+      - apiGroups: ["batch"]
+        apiVersions: ["v1"]
+        operations: ["CREATE", "UPDATE"]
+        resources: ["cronjobs"]
+  validations:
+    - expression: >-
+        object.metadata.?labels[?'platform.example.com/owner']
+        .orValue('').startsWith('group:team-')
+      # The message is part of the policy: it names the field and the fix.
+      message: >-
+        Missing or malformed `platform.example.com/owner`. Alerts cannot be
+        routed and cost cannot be attributed without it. Set it to your team's
+        group, e.g. `group:team-payments`. The golden path scaffold adds this
+        for you.
 ```
 
 ```yaml
-# Guardrail, not gate: fix it rather than rejecting it. `+()` adds only when
-# absent, so a team's deliberate value survives and remains visible in review.
-apiVersion: kyverno.io/v1
-kind: ClusterPolicy
+# Guardrail, not gate: fix it rather than rejecting it. `orValue()` keeps a
+# value the team set deliberately, so their choice survives and remains visible
+# in review; the default only fills the gap.
+apiVersion: policies.kyverno.io/v1
+kind: MutatingPolicy
 metadata: { name: default-security-context }
 spec:
-  rules:
-    - name: harden-by-default
-      match:
-        any: [{ resources: { kinds: [Pod], namespaces: ["team-*"] } }]
-      mutate:
-        patchStrategicMerge:
-          spec:
-            securityContext:
-              +(runAsNonRoot): true
-              +(seccompProfile): { type: RuntimeDefault }
-            containers:
-              - (name): "*"
-                securityContext:
-                  +(allowPrivilegeEscalation): false
-                  +(readOnlyRootFilesystem): true
-                  +(capabilities): { drop: ["ALL"] }
+  matchConstraints:
+    resourceRules:
+      - apiGroups: [""]
+        apiVersions: ["v1"]
+        operations: ["CREATE"]
+        resources: ["pods"]
+  matchConditions:
+    - name: tenant-namespaces
+      expression: "request.namespace.startsWith('team-')"
+  mutations:
+    - patchType: ApplyConfiguration
+      applyConfiguration:
+        expression: >-
+          Object{
+            spec: Object.spec{
+              securityContext: Object.spec.securityContext{
+                runAsNonRoot: object.spec.?securityContext.?runAsNonRoot.orValue(true)
+              },
+              containers: object.spec.containers.map(c, Object.spec.containers{
+                name: c.name,
+                securityContext: Object.spec.containers.securityContext{
+                  allowPrivilegeEscalation: c.?securityContext.?allowPrivilegeEscalation.orValue(false),
+                  readOnlyRootFilesystem: c.?securityContext.?readOnlyRootFilesystem.orValue(true)
+                }
+              })
+            }
+          }
 ```
 
 ```yaml
@@ -104,17 +127,20 @@ metadata: { name: require-owner-label }
 policies: [../require-owner-label.yaml]
 resources: [fixtures/deployments.yaml]
 results:
-  - policy: require-owner-label
-    rule: owner-label-present
+  - isValidatingPolicy: true
+    policy: require-owner-label
+    kind: Deployment
     resources: [checkout] # has a valid owner label
     result: pass
-  - policy: require-owner-label
-    rule: owner-label-present
+  - isValidatingPolicy: true
+    policy: require-owner-label
+    kind: Deployment
     resources: [no-owner] # missing entirely
     result: fail
-  - policy: require-owner-label
-    rule: owner-label-present
-    resources: [malformed-owner] # "payments" - does not match group:team-*
+  - isValidatingPolicy: true
+    policy: require-owner-label
+    kind: Deployment
+    resources: [malformed-owner] # "payments" - does not start with group:team-
     result: fail
 ```
 
@@ -125,7 +151,8 @@ results:
 - Continuous audit for pre-existing resources is the gap most people forget - admission only ever sees new and changed objects.
 - Guardrail versus gate, with mutation preferred over rejection, is the design principle interviewers are listening for. Fix it rather than refusing it.
 - Insist that the error message is part of the policy, and give a before-and-after. It is the cheapest way to make policy popular rather than resented.
-- Policies need tests with both allowed and denied fixtures. An untested policy is a cluster-wide production change and can take out your deployment path.
+- Policies need tests with both allowed and denied fixtures. An untested policy is a cluster-wide production change and can take out your deployment path. See [testing and versioning policies](./how-do-you-test-and-version-policies-like-application-code.md).
+- Being current helps: native ValidatingAdmissionPolicy and MutatingAdmissionPolicy are GA, Kyverno has moved to CEL policy types, and OPA 1.0 made Rego v1 the default.
 
 ---
 
