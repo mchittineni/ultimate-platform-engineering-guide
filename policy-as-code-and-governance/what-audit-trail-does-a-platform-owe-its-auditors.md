@@ -1,6 +1,6 @@
 ---
 title: "What audit trail does a platform owe its auditors?"
-id: 79
+id: 141
 category: "Policy as Code and Governance"
 difficulty: "Intermediate"
 tags:
@@ -19,18 +19,20 @@ tags:
 
 **The sources, and what each covers:**
 
-| Source                   | Covers                                               |
-| ------------------------ | ---------------------------------------------------- |
-| Git history              | Code and declared configuration, author, reviewer    |
-| CI/CD records            | What was built, tested, and deployed, and by whom    |
-| Kubernetes audit log     | Every API request, its identity, and the object diff |
-| Cloud audit log          | Infrastructure changes and API calls                 |
-| Identity provider logs   | Authentication, group membership changes             |
-| Break-glass session logs | Privileged commands attributed to a person           |
-| Policy decision logs     | What was admitted or rejected, and why               |
-| Flag change log          | Behaviour changes that did not go through a deploy   |
+| Source                   | Covers                                                         |
+| ------------------------ | -------------------------------------------------------------- |
+| Git history              | Code and declared configuration, author, reviewer              |
+| CI/CD records            | What was built, tested, and deployed, and by whom              |
+| Kubernetes audit log     | Every API request, its identity, and the object diff           |
+| Cloud audit log          | Infrastructure changes and API calls                           |
+| Identity provider logs   | Authentication, group membership changes                       |
+| Break-glass session logs | Privileged commands attributed to a person                     |
+| Policy decision logs     | What was admitted or rejected, why, under which policy version |
+| Flag change log          | Behaviour changes that did not go through a deploy             |
 
 **Attribution through automation is the hard part, and the most commonly missing.** The Kubernetes audit log shows the GitOps controller applied a change; the cloud audit log shows the provisioning controller created a database. Neither names the human. The fix is to correlate: the controller's action carries the commit it came from, the commit has an author and a reviewer, and the record joins them. Without that join, every production change is attributed to a service account, which satisfies nobody.
+
+**Policy decisions need to record the policy version.** An auditor asking whether a control operated throughout the period needs to know which rules were in force on a given date. Native ValidatingAdmissionPolicy failures in `Audit` mode are written as annotations into the Kubernetes audit log, Kyverno produces PolicyReports, and OPA decision logs include the bundle revision. Pinning a versioned policy bundle per cluster makes those records answerable. See [testing and versioning policies](./how-do-you-test-and-version-policies-like-application-code.md).
 
 **Changes outside the deployment path are the other systematic gap.** A feature flag flip changes production behaviour with no commit, no pipeline, and no deploy record. So can a configuration change in a vendor console, a manual scaling action, or a runtime toggle. Each of these needs its own recorded change event, and it should reach the same change feed as deployments - otherwise your change record is systematically missing your fastest-acting changes.
 
@@ -73,7 +75,7 @@ rules:
 The attribution join - the gap most platforms have. Neither log alone names a human.
 
   RAW (what the logs say on their own)
-    k8s audit    user=system:serviceaccount:argocd:application-controller
+    k8s audit    user=system:serviceaccount:argocd:argocd-application-controller
                  verb=patch  resource=deployments/checkout  ns=team-payments
                  -> attributed to a service account. Useless for an audit.
     cloud audit  principal=arn:...:role/crossplane-provider-aws

@@ -1,6 +1,6 @@
 ---
 title: "How do you handle policy exceptions without eroding the guardrails?"
-id: 78
+id: 140
 category: "Policy as Code and Governance"
 difficulty: "Intermediate"
 tags:
@@ -32,6 +32,8 @@ tags:
 **Narrow the scope aggressively.** Excluding a namespace from a policy exempts everything in it now and everything created in it later, including workloads nobody has thought about. Exempting a named resource for a named policy is bounded. This is the difference between a hole and a door.
 
 **Expiry must be enforced by the mechanism, not by a calendar reminder.** If the exception object carries a date and the controller stops honouring it after that date, exceptions cannot rot. If expiry is a note in a spreadsheet, most of them will still be there in three years. Renewal should be possible and should require the same approval as the original - that is the review.
+
+**Build on the engine's exception object, then add what it lacks.** Kyverno has a native `PolicyException` resource (including for its CEL policy types) that names the policies it applies to and narrows scope with match conditions, and Gatekeeper supports exemptions through constraint match rules and namespace exclusions. Neither carries a reason, approver, compensating control, or enforced expiry on its own, so platforms typically wrap them in their own exception resource, like the one below, and have a controller generate the engine's native object and delete it on the expiry date.
 
 **Compensating controls are what make an exception defensible.** "This workload needs a privileged capability" is a gap. "This workload needs a privileged capability; it runs on a dedicated node pool, has no network egress, and is reviewed monthly" is managed risk. Requiring the field forces the conversation, and it is also exactly what an auditor wants to see.
 
