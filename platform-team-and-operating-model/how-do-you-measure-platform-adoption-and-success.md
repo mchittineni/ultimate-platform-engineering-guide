@@ -1,6 +1,6 @@
 ---
 title: "How do you measure platform adoption and success?"
-id: 125
+id: 243
 category: "Platform Team and Operating Model"
 difficulty: "Intermediate"
 tags:
@@ -19,7 +19,9 @@ tags:
 
 **Retention is the sharper signal, and it is the one platform teams neglect.** A team that adopted a capability and then left is your most valuable interview. Voluntary adoption tells you the capability looked worth trying; retention tells you it was. Tracking departures, and treating each as a defect report rather than a betrayal, is what separates teams that improve from teams that keep shipping capabilities.
 
-**Measure the outcome the platform exists to produce.** Adoption is a means. The end is faster, safer delivery, which means lead time from commit to production, deployment frequency, change failure rate, and time to restore - the DORA set - plus time to first production change for a new engineer and time to create a new service. Compare teams on the platform against teams not on it, and compare before against after, while being honest that this is not a controlled experiment.
+**Measure the outcome the platform exists to produce.** Adoption is a means. The end is faster, safer delivery, which means lead time from commit to production, deployment frequency, change failure rate, failed deployment recovery time (DORA's current name for time to restore), and rework rate (added by DORA in 2024) - the DORA set - plus time to first production change for a new engineer and time to create a new service. Compare teams on the platform against teams not on it, and compare before against after, while being honest that this is not a controlled experiment.
+
+**Expect the outcome data to be mixed at first, and say so.** DORA's 2024 research found that internal developer platforms were associated with higher individual productivity and team performance, but also with a small average drop in throughput and change stability - consistent with the cost of migrating onto something new - and that giving developers independence to self-serve was what separated the platforms that helped. The 2025 report went further: a quality internal platform is one of the seven capabilities in its AI capabilities model, and where platform quality was low, AI adoption had a negligible effect on organisational performance. Both findings argue for measuring platform quality directly rather than assuming adoption implies benefit.
 
 **A useful set, with the trap each avoids:**
 
@@ -29,6 +31,7 @@ tags:
 | Retention after adoption                       | Celebrating adoption that did not stick    |
 | Lead time for change (p50 and p95)             | Measuring only the happy path              |
 | Change failure rate                            | Optimising speed at the cost of safety     |
+| Rework rate (unplanned deploys to fix issues)  | Hiding instability behind fast recovery    |
 | Time to first production change (new engineer) | Ignoring onboarding cost                   |
 | Time to create a new service                   | Measuring the demo rather than the journey |
 | Escape hatch and exception usage               | Assuming the paved road fits               |
@@ -73,7 +76,8 @@ The platform scorecard - and note the two rows that carry the most information.
                                                         not our tooling. Say so.
     deploy frequency/svc/wk   4.1     (was 3.3)
     change failure rate        11%    (was 14%)     speed did NOT cost safety
-    time to restore p50       24m     (was 31m)
+    failed deploy recovery p50 24m    (was 31m)
+    rework rate                 7%    (was 10%)
     new engineer -> 1st prod change  4.1d  (was 13.5d)
     time to create a service         41m   (was 3d)
 
@@ -111,7 +115,7 @@ Metrics deliberately NOT on the scorecard, and why:
 
 - Lead with adoption as the headline and immediately qualify it: adoption under a mandate measures compliance, so voluntary adoption is the number that carries information.
 - Retention is the differentiator. Most candidates stop at adoption; saying that a team which adopted and left is your most valuable interview shows product thinking.
-- Name the DORA metrics as the outcome layer, and be honest that comparing on-platform against off-platform is not a controlled experiment.
+- Name the DORA metrics as the outcome layer - using the current names, including failed deployment recovery time and the 2024 addition of rework rate - and be honest that comparing on-platform against off-platform is not a controlled experiment.
 - Baseline before building is the practical warning, and the most common reason platform teams cannot demonstrate value.
 - Escape hatch usage as both a health metric and a roadmap connects measurement to what you would do next.
 - Give the explicit list of metrics you would refuse, with ticket throughput as the actively harmful one because it rewards handling requests rather than eliminating them.

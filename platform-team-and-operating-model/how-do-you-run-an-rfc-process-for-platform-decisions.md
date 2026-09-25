@@ -1,6 +1,6 @@
 ---
 title: "How do you run an RFC process for platform decisions?"
-id: 128
+id: 244
 category: "Platform Team and Operating Model"
 difficulty: "Intermediate"
 tags:

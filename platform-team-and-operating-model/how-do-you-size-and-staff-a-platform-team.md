@@ -1,6 +1,6 @@
 ---
 title: "How do you size and staff a platform team?"
-id: 124
+id: 242
 category: "Platform Team and Operating Model"
 difficulty: "Intermediate"
 tags:

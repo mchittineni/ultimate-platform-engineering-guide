@@ -1,6 +1,6 @@
 ---
 title: "How do you migrate teams onto the platform without a mandate?"
-id: 126
+id: 246
 category: "Platform Team and Operating Model"
 difficulty: "Advanced"
 tags:
@@ -24,6 +24,8 @@ tags:
 **Publish what changed, in their words and with numbers.** "Deploys went from 40 minutes to 6, and they deleted 800 lines of pipeline YAML" is persuasive; "the platform provides a standardised pipeline" is not. A short write-up from the team itself is the most effective piece of internal marketing available.
 
 **Then approach teams with a specific offer.** Not "we would like you to adopt the platform" but "we have prepared a pull request migrating your three services; it passes your tests; can we walk through it on Thursday?" The difference in acceptance rate between a general invitation and a prepared change is large.
+
+**Expect a dip, and plan the story for it.** DORA's 2024 research found that platform adoption tends to come with a short-term drop in throughput and change stability before the gains arrive, and that platforms which let developers work independently did better. Telling early teams and leadership about the dip in advance - and fixing friction fast enough that it stays short - is what stops one bad fortnight becoming the reason the campaign stalls.
 
 **Automate the mechanical part.** Codemods, generated configuration, and bot-raised pull requests for the repetitive portions. Then the human effort concentrates on the genuinely unusual cases, which is where it should be.
 

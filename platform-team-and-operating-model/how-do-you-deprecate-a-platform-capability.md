@@ -1,6 +1,6 @@
 ---
 title: "How do you deprecate a platform capability?"
-id: 127
+id: 247
 category: "Platform Team and Operating Model"
 difficulty: "Advanced"
 tags:
@@ -107,15 +107,15 @@ kind: Deprecation
 metadata: { name: pipeline-v1 }
 spec:
   replacement: { capability: shared-workflow, docs: "go/platform-pipelines" }
-  announced: 2026-05-04
-  earliestRemoval: 2026-07-27 # a floor, NOT a commitment to remove on this date
+  announced: 2027-01-11
+  earliestRemoval: 2027-04-05 # a floor, NOT a commitment to remove on this date
   removeWhen: verified-zero-usage # the actual authorisation to remove
   signals:
-    - { from: 2026-05-04, type: docs-banner }
-    - { from: 2026-05-11, type: runtime-warning, channel: pipeline-log }
-    - { from: 2026-05-18, type: pr-comment, on: touches-deprecated-file }
-    - { from: 2026-06-29, type: scorecard-finding, severity: warning }
-    - { from: 2026-07-13, type: portal-banner, audience: owning-teams }
+    - { from: 2027-01-11, type: docs-banner }
+    - { from: 2027-01-18, type: runtime-warning, channel: pipeline-log }
+    - { from: 2027-01-25, type: pr-comment, on: touches-deprecated-file }
+    - { from: 2027-03-08, type: scorecard-finding, severity: warning }
+    - { from: 2027-03-22, type: portal-banner, audience: owning-teams }
   migration:
     automated: true
     codemod: scripts/migrate-pipeline-v1.py
