@@ -1,6 +1,6 @@
 ---
 title: "How do you manage secrets as a platform capability?"
-id: 68
+id: 124
 category: "Platform Security"
 difficulty: "Intermediate"
 tags:
@@ -46,7 +46,7 @@ The hierarchy applied to one service's actual needs - most of them turn out not
 to need a secret at all.
 
   NEED                        LEVEL   MECHANISM
-  read from S3                 1      IRSA - federated identity, no secret
+  read from S3                 1      EKS Pod Identity - federated, no secret
   connect to Postgres          1      IAM database authentication, token per
                                       connection, no password anywhere
   call the pricing service     1      mTLS with a workload identity certificate
@@ -70,6 +70,7 @@ metadata: { name: checkout-secrets, namespace: team-payments }
 spec:
   provider: aws
   parameters:
+    usePodIdentity: "true" # driver authenticates as the workload, via EKS Pod Identity
     objects: |
       - objectName: "team-payments/checkout/payment-provider"   # tenant-scoped path
         objectType: "secretsmanager"

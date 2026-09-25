@@ -1,6 +1,6 @@
 ---
 title: "How does a platform provide workload identity without long-lived credentials?"
-id: 66
+id: 127
 category: "Platform Security"
 difficulty: "Advanced"
 tags:
@@ -25,11 +25,11 @@ tags:
 
 | Cloud | Mechanism                    | Binding                               |
 | ----- | ---------------------------- | ------------------------------------- |
-| AWS   | IRSA, or EKS Pod Identity    | Service account → IAM role            |
+| AWS   | EKS Pod Identity, or IRSA    | Service account → IAM role            |
 | Azure | Entra Workload ID            | Service account → managed identity    |
 | GCP   | Workload Identity Federation | Service account → IAM service account |
 
-Pod Identity on AWS is worth knowing as the newer option: the association is configured on the cluster rather than as an annotation plus a trust policy per role, which removes a class of trust-policy mistakes and simplifies cross-account use.
+EKS Pod Identity is now the default recommendation for new EKS workloads, with IRSA still supported and still common in existing estates (and needed outside EKS). The association is configured through the EKS API rather than as an annotation plus a per-cluster OIDC trust policy per role, and the role trusts the `pods.eks.amazonaws.com` service principal - which removes a class of trust-policy mistakes and simplifies reusing a role across clusters. The subject-pinning discipline below still applies to IRSA and to every other OIDC federation.
 
 **Extend the same model beyond the cloud.** Databases can accept IAM authentication or short-lived certificates instead of passwords. Internal service-to-service calls can use mTLS with certificates issued to the workload identity - SPIFFE and SPIFFE Verifiable Identity Documents are the vendor-neutral standard here, and a service mesh usually implements it. Third-party services increasingly support OIDC federation directly. The goal is that the workload's identity, not a secret it holds, is what grants access everywhere.
 
@@ -87,16 +87,11 @@ spec:
       containers:
         - name: checkout
           image: ghcr.io/example/checkout@sha256:9f2c8b1d...
-          # No AWS_ACCESS_KEY_ID anywhere. The SDK finds the projected token,
-          # exchanges it for temporary credentials, and refreshes them itself.
-      volumes:
-        - name: aws-token
-          projected:
-            sources:
-              - serviceAccountToken:
-                  audience: sts.amazonaws.com
-                  expirationSeconds: 3600 # short-lived, auto-rotated by the kubelet
-                  path: token
+          # No AWS_ACCESS_KEY_ID anywhere. EKS's pod identity webhook injects a
+          # projected service account token (audience sts.amazonaws.com, short-
+          # lived, rotated by the kubelet) plus AWS_ROLE_ARN and
+          # AWS_WEB_IDENTITY_TOKEN_FILE. The SDK exchanges the token for
+          # temporary credentials and refreshes them itself.
 ```
 
 ```text
@@ -131,7 +126,7 @@ Continuous verification - and note where the findings come from:
 - Describe the exchange precisely: a signed, short-lived, audience-scoped token from the runtime, exchanged at a federation endpoint for temporary credentials. Naming the chain of trust from the cluster signing key to the cloud trust policy is what demonstrates understanding.
 - The wildcard trust-policy subject is the single highest-value point. Say what it breaks - any Pod in the cluster can assume the role - and that it is usually debugging drift rather than bad design.
 - Mention the audience condition too. Most candidates remember the subject and forget that audience prevents cross-system token replay.
-- Know the three cloud mechanisms by name, and mention AWS Pod Identity as the newer option that removes a class of trust-policy mistakes.
+- Know the three cloud mechanisms by name, and mention EKS Pod Identity as the current default for new EKS workloads that removes a class of trust-policy mistakes - while being able to explain IRSA, which most existing estates still run.
 - Extend the model beyond the cloud - database IAM authentication, mTLS with SPIFFE identities - to show you see it as an identity strategy rather than one integration.
 - One identity per workload, and the platform generating it, are the two operational rules. Hand-written trust policies at scale guarantee some will be wrong.
 

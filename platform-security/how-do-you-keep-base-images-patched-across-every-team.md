@@ -1,6 +1,6 @@
 ---
 title: "How do you keep base images patched across every team?"
-id: 70
+id: 125
 category: "Platform Security"
 difficulty: "Intermediate"
 tags:
@@ -38,11 +38,12 @@ tags:
 ```dockerfile
 # The platform's base image - narrow, minimal, non-root, patched centrally.
 # platform-images/go/Dockerfile
-FROM gcr.io/distroless/static-debian12:nonroot
+FROM gcr.io/distroless/static-debian13:nonroot
 
-# Platform-supplied invariants every service inherits
-COPY --from=ca-certs /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
-COPY --from=tzdata /usr/share/zoneinfo /usr/share/zoneinfo
+# distroless/static already ships CA certificates, tzdata, and a nonroot user.
+# Platform-supplied invariant every service inherits: the internal CA
+# (Go, for example, loads every certificate file in /etc/ssl/certs).
+COPY internal-ca.pem /etc/ssl/certs/internal-ca.pem
 
 USER nonroot:nonroot
 ENTRYPOINT ["/app"]
@@ -66,12 +67,14 @@ jobs:
     runs-on: ubuntu-latest
     permissions: { contents: read, id-token: write, packages: write }
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
       - run: |
-          docker build -t "ghcr.io/example/base-${{ matrix.variant }}:$(date +%Y%m%d)" \
-            platform-images/${{ matrix.variant }}
-          docker push "ghcr.io/example/base-${{ matrix.variant }}:$(date +%Y%m%d)"
-      - run: cosign sign --yes "ghcr.io/example/base-${{ matrix.variant }}:$(date +%Y%m%d)"
+          IMAGE="ghcr.io/example/base-${{ matrix.variant }}:$(date +%Y%m%d)"
+          docker build -t "$IMAGE" platform-images/${{ matrix.variant }}
+          docker push "$IMAGE"
+          # Sign the digest, not the tag - the tag is mutable.
+          DIGEST=$(docker buildx imagetools inspect "$IMAGE" --format '{{json .Manifest.Digest}}' | tr -d '"')
+          cosign sign --yes "ghcr.io/example/base-${{ matrix.variant }}@${DIGEST}"
 
   # The part that actually matters: rebuild every consumer, test, and only then
   # raise a PR. A red automated bump creates work instead of removing it.
@@ -109,7 +112,7 @@ The metric that tells you whether the mechanism works:
   THIRD-PARTY IMAGES (not built on our base - usually the oldest in the estate)
     vendor-search-agent:2.1      412d   owner: bob   vendor contacted 2026-06-01
     legacy-db-operator:0.9       288d   owner: carol  upgrade path blocked
-    ingress-controller:1.11       21d   owner: platform  current
+    gateway-controller:1.5        21d   owner: platform  current
 
   Note the two failure modes: a service whose tests depend on something the
   minimal base removed, and a service missing from the catalogue so the fan-out

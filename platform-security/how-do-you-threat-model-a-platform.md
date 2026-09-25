@@ -1,6 +1,6 @@
 ---
 title: "How do you threat model a platform?"
-id: 73
+id: 132
 category: "Platform Security"
 difficulty: "Advanced"
 tags:
@@ -28,12 +28,15 @@ tags:
 | Control plane → everything  | Compromised controller credential; malicious admission webhook                                                        |
 | Operator → everything       | Insider or compromised laptop with standing privileged access                                                         |
 | External → platform surface | Exposed preview environment, portal, or dashboard                                                                     |
+| Agent → platform            | A prompt-injected AI coding agent or MCP server acting with a developer's or pipeline's credentials                   |
 
 **The confused-deputy problem is the distinctive platform threat.** A controller acts on behalf of users with far more privilege than any of them. If a tenant can submit a resource that causes the controller to do something on their behalf that they could not do directly - reference a secret in another namespace, target a resource outside their scope, template a value into a privileged field - they have escalated through your automation. Validating that every referenced object is within the requester's own scope is the control, and it is easy to omit.
 
 **Enumerate the standing privileges honestly.** List every identity with broad reach - controller service accounts, CI roles, operator break-glass, the reconciler - and for each ask what a compromise achieves and what would detect it. This exercise usually finds at least one credential that is far broader than anyone remembered.
 
 **Model your own tooling as an attack surface.** An admission webhook that can mutate any Pod is a code-execution vector into every workload. A portal that renders user-supplied templates can be abused. A controller that fetches a URL from a resource spec is a server-side request forgery primitive pointed at your metadata endpoint. Platform teams routinely threat model tenant workloads and never their own controllers.
+
+**Treat AI agents as a new class of tenant.** Coding assistants and agents now call platform APIs, open pull requests, and use MCP servers that expose platform capabilities. Each is an identity acting on untrusted input, so give it its own scoped, short-lived credentials rather than a borrowed human token, keep destructive operations behind the same approvals a human would face, and log its actions as its own.
 
 **Include availability, because for a platform it is a security property.** A tenant able to exhaust the API server, fill etcd, or trigger unbounded reconciliation denies service to every other tenant. Fail-closed admission webhooks are self-inflicted versions of the same thing.
 
