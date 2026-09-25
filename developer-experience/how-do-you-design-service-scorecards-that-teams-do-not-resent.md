@@ -1,6 +1,6 @@
 ---
 title: "How do you design service scorecards that teams do not resent?"
-id: 14
+id: 25
 category: "Developer Experience"
 difficulty: "Advanced"
 tags:

@@ -1,6 +1,6 @@
 ---
 title: "What is Backstage and when is it the wrong choice?"
-id: 12
+id: 22
 category: "Developer Experience"
 difficulty: "Intermediate"
 tags:
@@ -11,7 +11,7 @@ tags:
 
 # What is Backstage and when is it the wrong choice?
 
-**Short answer:** Backstage is an open-source framework, originally from Spotify and now a CNCF project, for building a developer portal - a software catalogue, scaffolding templates, technical documentation, and a plugin system that surfaces your other tools in one place. It is the wrong choice when you have no provisioning behind it, when you cannot staff a frontend application as a long-lived internal product, or when the actual problem is that developers do not have a paved road rather than that they cannot find things.
+**Short answer:** Backstage is an open-source framework, originally from Spotify and now a CNCF incubating project, for building a developer portal - a software catalogue, scaffolding templates, technical documentation, and a plugin system that surfaces your other tools in one place. It is the wrong choice when you have no provisioning behind it, when you cannot staff a frontend application as a long-lived internal product, or when the actual problem is that developers do not have a paved road rather than that they cannot find things.
 
 ## Detail
 
@@ -19,7 +19,7 @@ tags:
 
 **What it does not give you.** Backstage provisions nothing on its own. It is a presentation and cataloguing layer; the platform capabilities behind it - the pipeline, the reconciler, the infrastructure control plane - are yours to build or buy. Organisations that install Backstage expecting a platform get a well-designed index of the tooling they already had.
 
-**The honest cost.** Backstage is a TypeScript application you fork and own. That means a real frontend and Node.js codebase, an upgrade treadmill against a fast-moving upstream, integration work per plugin, and authentication and authorisation wiring into your identity provider. Teams routinely underestimate this. Budget a meaningful ongoing share of an engineer's time indefinitely, not a one-off installation project.
+**The honest cost.** Backstage is a TypeScript application you fork and own. That means a real frontend and Node.js codebase, an upgrade treadmill against a fast-moving upstream, integration work per plugin, and authentication and authorisation wiring into your identity provider. Teams routinely underestimate this. Budget a meaningful ongoing share of an engineer's time indefinitely, not a one-off installation project. The project has reduced some of this: the new backend system and the new declarative frontend system let you install plugins as packages with configuration rather than hand-wiring them into forked app code, so migrating to both is worth planning if you run an older instance. It still does not make Backstage free to own.
 
 **When it is the right choice:**
 
@@ -36,6 +36,8 @@ tags:
 - **The real problem is elsewhere.** If deployments are slow and flaky, a portal does not help and will consume the quarter that should have fixed them.
 
 **The alternatives worth naming.** A generated static catalogue from repository descriptors gets you most of the ownership value for a fraction of the cost. Commercial internal-developer-portal products trade flexibility for not owning a codebase. And Git plus a CLI remains a perfectly respectable developer control plane - many strong platforms have no portal at all, because the portal is the discovery surface, not the platform.
+
+**Portals now have a second audience: AI agents.** Since v1.40 Backstage has an actions registry, and the MCP actions backend plugin exposes registered actions - catalogue queries, template runs - as Model Context Protocol tools, under the same permission model as the REST APIs. That makes an accurate catalogue more valuable, because coding agents can ask it who owns a service or scaffold from a golden path instead of guessing. It does not change the core argument: an agent calling a template with nothing behind it gets the same ticket queue a human does.
 
 **The sequencing that works.** Catalogue first, from descriptor files. Then documentation. Then scorecards. Then templates. Then plugins, only where a specific question is being asked repeatedly. Teams that start with plugins build a dashboard nobody opens twice.
 

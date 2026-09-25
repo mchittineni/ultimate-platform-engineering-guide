@@ -1,6 +1,6 @@
 ---
 title: "How do you reduce the time it takes a new engineer to ship to production?"
-id: 13
+id: 23
 category: "Developer Experience"
 difficulty: "Intermediate"
 tags:
