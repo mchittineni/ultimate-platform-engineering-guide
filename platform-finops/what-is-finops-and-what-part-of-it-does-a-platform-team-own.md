@@ -1,6 +1,6 @@
 ---
 title: "What is FinOps and what part of it does a platform team own?"
-id: 117
+id: 224
 category: "Platform FinOps"
 difficulty: "Beginner"
 tags:
@@ -18,6 +18,8 @@ tags:
 **Why cloud cost needs a practice at all.** In a data centre, capacity was a procurement decision made once, by a small number of people. In the cloud an engineer's pull request changes the monthly bill, thousands of such decisions are made continuously, and the bill arrives a month later aggregated into something nobody can trace back. FinOps exists to close that feedback loop.
 
 **The standard shape of the practice is three iterating phases** - inform, optimise, operate. Inform means visibility, allocation, and forecasting: teams knowing what they spend. Optimise means acting on that - right-sizing, commitments, eliminating waste. Operate means making it continuous: policy, automation, and accountability rather than a quarterly clean-up exercise. Most organisations attempt to optimise before they can inform, which produces argument rather than savings because nobody agrees on the numbers.
+
+**The scope is wider than cloud now.** The FinOps Framework has grown from public cloud to "Cloud+" scopes - SaaS, software licensing, data centre, and AI spend including model APIs and GPUs - and the FinOps Foundation's FOCUS specification gives all of those sources a common billing schema. For a platform team this mostly means the observability vendor, the CI provider, and model API usage belong in the same cost view as compute. See [What is the FOCUS specification and why does it matter?](./what-is-the-focus-specification-and-why-does-it-matter.md).
 
 **What a platform team specifically owns:**
 

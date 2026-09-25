@@ -1,6 +1,6 @@
 ---
 title: "How do you use commitments and spot capacity on behalf of every team?"
-id: 121
+id: 235
 category: "Platform FinOps"
 difficulty: "Advanced"
 tags:
@@ -23,7 +23,7 @@ tags:
 
 **Ladder the terms.** Rather than committing everything at once for a long term, stagger commitments so a portion expires each quarter. That gives you regular opportunities to adjust to a changed estate without a cliff, and it avoids the situation where a large commitment expires at a moment when your usage happens to be atypical.
 
-**Spot capacity needs the platform to make it a declaration.** The mechanics - interruption handling, node draining, disruption budgets, diversification across instance types and zones, on-demand fallback - are real work, and no team should implement them. Exposing `interruptible: true` in the service specification and having the platform place the workload on a spot node pool with all of that configured is the whole value.
+**Spot capacity needs the platform to make it a declaration.** The mechanics - interruption handling, node draining, disruption budgets, diversification across instance types and zones, on-demand fallback - are real work, and no team should implement them. Exposing `interruptible: true` in the service specification and having the platform place the workload on a spot node pool with all of that configured is the whole value. Node autoscalers now carry much of the mechanics: Karpenter 1.x handles spot interruption and rebalance notices natively and consolidates onto cheaper capacity, and managed modes such as EKS Auto Mode and GKE Autopilot run that layer for you - which leaves the platform's job as the interface, the eligibility rules, and the diversification policy.
 
 **Which workloads are genuinely interruptible.** Batch jobs, CI runners, asynchronous consumers with durable queues, preview environments, and stateless services with enough replicas and correct disruption budgets. Not: stateful singletons, anything with a long unbreakable in-flight operation, or a service whose replica count is already at the minimum for its availability target.
 
@@ -105,7 +105,8 @@ What the platform configures from that one field - none of it the team's concern
     on-demand fallback if spot capacity is genuinely unavailable
 
   INTERRUPTION HANDLING
-    termination handler drains the node on a reclamation notice
+    interruption notice handled by the node autoscaler (Karpenter) - node
+      cordoned and drained, replacement launched before reclamation
     PodDisruptionBudget generated from tier
     terminationGracePeriodSeconds 120 so in-flight work finishes
     PriorityClass tier-3-batch, preemptionPolicy: Never

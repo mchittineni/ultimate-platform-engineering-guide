@@ -1,6 +1,6 @@
 ---
 title: "How do you attribute shared platform cost to teams?"
-id: 118
+id: 233
 category: "Platform FinOps"
 difficulty: "Advanced"
 tags:
@@ -33,7 +33,7 @@ tags:
 
 **Publish the unallocated percentage.** Some cost genuinely resists attribution - inter-zone data transfer, load balancer capacity charges, support fees. Name them, choose a treatment, and publish the residual. If a third of spend is unattributed, no team's number means anything, so this figure is the credibility metric for the whole exercise.
 
-**Show the workings.** A team should be able to see not just its number but how it was derived: this much directly attributed, this much from its share of the cluster, this much from the split rule, with the inputs visible. Numbers a team can reproduce get accepted; numbers they cannot get disputed regardless of accuracy.
+**Show the workings.** A team should be able to see not just its number but how it was derived: this much directly attributed, this much from its share of the cluster, this much from the split rule, with the inputs visible. Numbers a team can reproduce get accepted; numbers they cannot get disputed regardless of accuracy. Build the pipeline on FOCUS-format billing exports where providers offer them - FOCUS 1.3 added allocation columns so a provider can state how it split a shared resource's cost - and on pod-level data for shared clusters, covered in [Why is Kubernetes cost allocation hard?](./why-is-kubernetes-cost-allocation-hard.md).
 
 **Get agreement before you publish, once.** The allocation rule for shared cost is a political artefact as much as a technical one. Agreeing it with engineering leadership and the finance partner up front, and being able to point at that agreement, removes the monthly negotiation. Deriving it unilaterally guarantees the negotiation happens every month instead.
 

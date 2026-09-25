@@ -1,6 +1,6 @@
 ---
 title: "How do you build unit economics for a platform?"
-id: 120
+id: 234
 category: "Platform FinOps"
 difficulty: "Advanced"
 tags:
@@ -17,7 +17,7 @@ tags:
 
 **Why absolute cost is the wrong number to manage.** A monthly bill that grew 20% tells you nothing on its own. If traffic grew 40%, efficiency improved. If traffic was flat, something regressed. Absolute cost cannot distinguish these, which is why cost conversations based on the total are frustrating and why unit economics is the reframe that makes them productive.
 
-**Choose the unit from the business, not from the infrastructure.** Cost per order, per active user, per transaction, per tenant, per gigabyte processed - whatever the organisation already uses to describe its growth. A unit nobody outside engineering recognises will not be used in the conversations that matter. Cost per CPU hour is an infrastructure metric, not a unit economic.
+**Choose the unit from the business, not from the infrastructure.** Cost per order, per active user, per transaction, per tenant, per gigabyte processed - whatever the organisation already uses to describe its growth. A unit nobody outside engineering recognises will not be used in the conversations that matter. Cost per CPU hour is an infrastructure metric, not a unit economic. For AI features the natural units are cost per thousand inferences, per conversation, or per million tokens served, because model API and GPU cost scale with those rather than with orders - see [How do you manage the cost of GPU and AI workloads on a platform?](./how-do-you-manage-the-cost-of-gpu-and-ai-workloads-on-a-platform.md).
 
 **Layer the platform's own units on top.** These are the ones a platform team can actually move:
 

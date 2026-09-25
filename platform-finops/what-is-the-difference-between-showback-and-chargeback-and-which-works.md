@@ -1,6 +1,6 @@
 ---
 title: "What is the difference between showback and chargeback, and which works?"
-id: 119
+id: 229
 category: "Platform FinOps"
 difficulty: "Intermediate"
 tags:
