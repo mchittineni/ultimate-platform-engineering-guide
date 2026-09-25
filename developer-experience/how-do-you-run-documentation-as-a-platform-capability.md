@@ -1,6 +1,6 @@
 ---
 title: "How do you run documentation as a platform capability?"
-id: 15
+id: 14
 category: "Developer Experience"
 difficulty: "Beginner"
 tags:
@@ -33,6 +33,8 @@ tags:
 A reference table cannot teach a newcomer, and a tutorial cannot answer a precise question at 3am. Most platform documentation is all how-to and no explanation, which is why teams follow instructions without understanding and cannot adapt when something is unusual.
 
 **Generate what can be generated.** The reference documentation for a platform API should come from the schema - the custom resource definition, the JSON Schema, the module variables - so it cannot drift. Hand-written reference documentation for a machine-readable interface is guaranteed to be wrong eventually.
+
+**Documentation now has machine readers too.** AI coding assistants and agents answer many developer questions by retrieving internal docs - through the portal, a search index, or an MCP server. Stale or contradictory pages now produce confidently wrong generated code, not just a confused reader, which raises the value of a single current source, clear page types, and generated reference material.
 
 **Close the loop with evidence.** Instrument search terms that return nothing, pages with high exit rates, and the questions actually asked in your support channel. Every recurring question is a documentation defect; the standard practice worth adopting is that answering a support question in chat is not finished until the answer exists in the docs and the asker was pointed at it.
 

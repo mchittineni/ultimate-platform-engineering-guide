@@ -1,6 +1,6 @@
 ---
 title: "What is cognitive load and why does it drive platform design?"
-id: 10
+id: 20
 category: "Developer Experience"
 difficulty: "Intermediate"
 tags:

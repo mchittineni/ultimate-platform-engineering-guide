@@ -1,6 +1,6 @@
 ---
 title: "What is developer experience and how do you measure it?"
-id: 9
+id: 19
 category: "Developer Experience"
 difficulty: "Intermediate"
 tags:
@@ -19,13 +19,14 @@ tags:
 
 **The frameworks worth knowing by name:**
 
-| Framework | Measures                                                                         | Best used for                        |
-| --------- | -------------------------------------------------------------------------------- | ------------------------------------ |
-| DORA      | Deployment frequency, lead time for change, change failure rate, time to restore | Delivery capability, trend over time |
-| SPACE     | Satisfaction, Performance, Activity, Communication, Efficiency and flow          | Choosing a balanced metric set       |
-| DevEx     | Feedback loops, cognitive load, flow state                                       | Diagnosing _why_ DevEx is poor       |
+| Framework | Measures                                                                                                                                        | Best used for                         |
+| --------- | ----------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------- |
+| DORA      | Throughput (change lead time, deployment frequency, failed deployment recovery time) and instability (change fail rate, deployment rework rate) | Delivery capability, trend over time  |
+| SPACE     | Satisfaction, Performance, Activity, Communication, Efficiency and flow                                                                         | Choosing a balanced metric set        |
+| DevEx     | Feedback loops, cognitive load, flow state                                                                                                      | Diagnosing _why_ DevEx is poor        |
+| DX Core 4 | Speed, Effectiveness, Quality, Impact - one key metric each                                                                                     | A compact set to report to leadership |
 
-DORA tells you how you are doing. The DevEx framework's three dimensions - feedback loops, cognitive load, flow state - tell you where to intervene, which is what a platform team actually needs.
+DORA tells you how you are doing. The DevEx framework's three dimensions - feedback loops, cognitive load, flow state - tell you where to intervene, which is what a platform team actually needs. DORA's model grew from four metrics to five in 2024 with the addition of rework rate, and "time to restore" was narrowed to recovery from failed deployments; see [What are the DORA metrics and what do they measure?](./what-are-the-dora-metrics-and-what-do-they-measure.md) and [How do SPACE, DevEx, and DX Core 4 differ as measurement frameworks?](./how-do-space-devex-and-dx-core-4-differ-as-measurement-frameworks.md).
 
 **Metrics a platform team can act on:**
 
@@ -37,6 +38,8 @@ DORA tells you how you are doing. The DevEx framework's three dimensions - feedb
 - **Support question volume by category** - your backlog, effectively, and the cheapest research you will ever do.
 
 **The measurement traps.** Never measure individuals - metrics used for performance review get gamed within a quarter and you lose the signal permanently. Do not use commit counts, lines changed, or story points as DevEx proxies; they measure activity, not friction. And beware averages: a median lead time of two hours with a 95th percentile of nine days means most of the pain is invisible in the headline.
+
+**AI tools change what the numbers mean.** With AI coding assistants and agents now routine, output metrics can rise while review load, rework, and change failures rise with them - DORA's 2025 report found exactly that pattern. Keep the instability metrics and review wait time in the set, and read throughput gains against them; [How do you measure the impact of AI coding tools on developer productivity?](./how-do-you-measure-the-impact-of-ai-coding-tools-on-developer-productivity.md) covers the method.
 
 **Qualitative research beats both.** The highest-value thing a platform team does is watch three engineers deploy a service while saying nothing. Every survey has a ceiling on what it can reveal; observation does not.
 
@@ -51,7 +54,8 @@ SYSTEM                                 now     prev    target   diagnosis
   lead time, commit -> prod (p95)      6.1d    6.4d    <2d      review queue, not CI
   deploy frequency / service / week    4.1     3.3     >3       ok
   change failure rate                  11%     9%      <15%     ok
-  time to restore (p50)                24m     31m     <30m     ok
+  failed deploy recovery time (p50)    24m     31m     <30m     ok
+  deployment rework rate               4%      5%      <5%      ok
   CI pipeline duration (p50)           14m     22m     <10m     test parallelism next
   local build + test cycle             4m10s   4m05s   <1m      NOT IMPROVING - biggest
                                                                 daily cost, no owner
@@ -74,7 +78,7 @@ Notice neither would have been visible from DORA metrics alone.
 ## Interview tips
 
 - Insisting on both system and perceptual data, and explaining what each one misses, is the core of a strong answer.
-- Name DORA and the DevEx framework, and be clear about the division of labour: DORA measures outcomes, feedback loops and cognitive load explain them.
+- Name DORA and the DevEx framework, and be clear about the division of labour: DORA measures outcomes, feedback loops and cognitive load explain them. Knowing DORA's current five metrics, and where DX Core 4 fits, shows your knowledge is current.
 - Percentiles, not averages. Saying "p50 and p95 tell different stories and the p95 is where the pain lives" is a strong, concrete signal.
 - Say plainly that you would never measure individuals, and why - it will be tested, sometimes as "how would you identify the least productive team?"
 - The best close is that you would sit with three teams and watch them deploy before instrumenting anything.
