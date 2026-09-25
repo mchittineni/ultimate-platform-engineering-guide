@@ -1,6 +1,6 @@
 ---
 title: "When should a platform capability be a service, a library, or a template?"
-id: 20
+id: 33
 category: "Platform Architecture"
 difficulty: "Intermediate"
 tags:
@@ -32,7 +32,7 @@ tags:
 **The two hybrids that solve most real cases:**
 
 - **Thin library over a service.** The library is a stable, minimal client; the logic and policy live in the service. Fixes to behaviour ship centrally, and the library changes rarely. OpenFeature's SDK-plus-provider model is exactly this shape, and it is why it is a good pattern to cite.
-- **Sidecar or agent.** Runs alongside the workload, so it is language-agnostic and upgradeable by the platform through a rolling restart, without being in a separate network hop. This is how service meshes and telemetry collectors escape the library treadmill, at the cost of per-pod resource overhead.
+- **Sidecar or agent.** Runs alongside the workload, so it is language-agnostic and upgradeable by the platform through a rolling restart, without being in a separate network hop. This is how service meshes and telemetry collectors escape the library treadmill, at the cost of per-pod resource overhead. Two recent developments shift this: native sidecar containers (GA in Kubernetes 1.33) fix start-up and shutdown ordering, and Istio's ambient mode (GA since Istio 1.24) moves mesh proxying into a per-node agent, keeping the platform-upgradeable property without a proxy in every pod.
 
 **Reconciled generation beats templating.** If you want template-like ergonomics with the ability to change things later, generate the artefacts from a declarative spec and reconcile them continuously. The developer writes twenty lines, the platform owns the output, and improving the output improves every service - the property a template can never give you.
 

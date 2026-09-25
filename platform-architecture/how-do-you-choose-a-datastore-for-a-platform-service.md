@@ -1,6 +1,6 @@
 ---
 title: "How do you choose a datastore for a platform service?"
-id: 22
+id: 34
 category: "Platform Architecture"
 difficulty: "Intermediate"
 tags:
@@ -47,7 +47,7 @@ tags:
 ```text
 Deciding for three real platform services - same estate, three answers.
 
-1. Platform desired state (Service, PostgresInstance claims)
+1. Platform desired state (Service, PostgresInstance resources)
    pattern: read by name, watch for changes, ~50 writes/min
    consistency: strong - a reconciler acting on stale state duplicates resources
    loss tolerance: none - losing this orphans real infrastructure

@@ -1,6 +1,6 @@
 ---
 title: "How do you keep a platform abstraction escapable?"
-id: 18
+id: 37
 category: "Platform Architecture"
 difficulty: "Advanced"
 tags:
@@ -79,7 +79,7 @@ spec:
                   effect: NoSchedule
       reason: "GPU scheduling; platform does not model accelerators yet"
       owner: group:team-ml
-      review_by: 2026-09-30
+      review_by: 2027-03-31
 ```
 
 ```text

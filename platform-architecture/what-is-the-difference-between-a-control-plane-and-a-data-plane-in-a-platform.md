@@ -1,6 +1,6 @@
 ---
 title: "What is the difference between a control plane and a data plane in a platform?"
-id: 16
+id: 32
 category: "Platform Architecture"
 difficulty: "Intermediate"
 tags:
@@ -26,7 +26,7 @@ tags:
 | GitOps reconciler (Argo, Flux)  | Control     | No new deploys; running workloads unaffected     |
 | Ingress controller              | **Data**    | Traffic stops - this is a production dependency  |
 | Service mesh control plane      | Control     | No config changes; existing proxies keep routing |
-| Service mesh sidecar / proxy    | **Data**    | That workload's traffic stops                    |
+| Mesh sidecar, ztunnel, waypoint | **Data**    | That workload's traffic stops                    |
 | Secret store, read at pod start | Control-ish | New pods fail to start; running pods fine        |
 | Secret store, read per request  | **Data**    | Requests fail - avoid this design                |
 | Feature flag SDK, local eval    | Control     | Rules go stale; evaluation continues             |
@@ -37,7 +37,7 @@ The pattern in the rows that surprise people: a component becomes data plane the
 
 **Design consequences for the platform team.** Data-plane components need capacity headroom, per-tenant isolation, and rollout care - you cannot restart them all at once. Control-plane components can be upgraded during the day, can be briefly unavailable, and should be built so that their unavailability is obvious and safe rather than silently degrading. Argo CD being down should stop deploys loudly, not partially apply.
 
-**The failure mode to avoid: fail-closed data plane dependencies.** An admission webhook that rejects Pods when it cannot be reached will, during its own outage, prevent every Pod in the cluster from starting - including the ones that would fix it. That is a control-plane component with data-plane blast radius, and it is one of the most common self-inflicted platform outages.
+**The failure mode to avoid: fail-closed data plane dependencies.** An admission webhook that rejects Pods when it cannot be reached will, during its own outage, prevent every Pod in the cluster from starting - including the ones that would fix it. That is a control-plane component with data-plane blast radius, and it is one of the most common self-inflicted platform outages. For rules that can be expressed in CEL, ValidatingAdmissionPolicy (GA since Kubernetes 1.30) runs inside the API server itself, which removes the separate webhook service - and its network hop - from the path entirely.
 
 **State is what makes control planes hard.** The control plane owns the desired state and usually a record of what it created. Losing that record is worse than losing the process: you can restart a controller, but if it no longer knows it created a database, it may create a second one or orphan the first. This is why control-plane state gets the backup and restore rigour normally reserved for production data.
 
