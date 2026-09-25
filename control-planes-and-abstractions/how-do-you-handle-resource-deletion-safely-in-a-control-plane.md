@@ -1,6 +1,6 @@
 ---
 title: "How do you handle resource deletion safely in a control plane?"
-id: 42
+id: 77
 category: "Control Planes and Abstractions"
 difficulty: "Advanced"
 tags:
@@ -21,7 +21,7 @@ tags:
 
 **The layered defences, and you want several because each one has a bypass:**
 
-- **Deletion policy on the managed resource.** Set it to orphan for anything stateful, so removing the control-plane object leaves the real resource in place, tagged as orphaned. You can always clean up deliberately later; you cannot un-drop a database.
+- **Deletion policy on the managed resource.** Set it to orphan for anything stateful, so removing the control-plane object leaves the real resource in place, tagged as orphaned. You can always clean up deliberately later; you cannot un-drop a database. In Crossplane v2 the namespaced managed resources no longer have a `deletionPolicy` field - the equivalent is `managementPolicies` that omit `Delete` (for example `["Create", "Observe", "Update", "LateInitialize"]`), which the composition should set for every stateful resource.
 - **Admission policy on delete.** Reject deletion of production stateful claims unless a specific annotation is present. The annotation is the explicit act - it cannot be produced by a namespace deletion or a Git prune.
 - **Cloud-side protection.** Deletion protection on the database, object lock or versioning on buckets, `prevent_destroy` on Terraform resources. This is the backstop for when your control plane is the thing that is wrong.
 - **Turn off automatic pruning for stateful resources.** GitOps pruning is correct for Deployments and dangerous for databases. Scope it by resource type, or exclude stateful claims from prune entirely.
@@ -49,7 +49,8 @@ metadata:
 spec:
   size: small
   pitr: true
-  deletionPolicy: Orphan # NOT Delete, for anything holding data
+  deletionPolicy: Orphan # NOT Delete, for anything holding data - the composition
+  # maps this to managementPolicies without "Delete" on the managed resource
   providerConfig:
     deletionProtection: true # Layer 3 - cloud-side backstop
     finalSnapshot: true

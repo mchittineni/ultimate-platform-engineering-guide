@@ -1,6 +1,6 @@
 ---
 title: "What problem does a workload specification like Score solve?"
-id: 40
+id: 71
 category: "Control Planes and Abstractions"
 difficulty: "Intermediate"
 tags:

@@ -1,6 +1,6 @@
 ---
 title: "How do you provide self-service infrastructure without handing out cloud credentials?"
-id: 43
+id: 78
 category: "Control Planes and Abstractions"
 difficulty: "Advanced"
 tags:
@@ -17,11 +17,11 @@ tags:
 
 **Why direct cloud access does not work for self-service.** Giving a team an IAM role broad enough to create databases means giving them a role broad enough to create anything, including resources with no encryption, no backups, public access, or no cost tags. Attempts to constrain this with policy conditions become unreadable, and the permission surface is enormous. The problem is that cloud IAM authorises API calls, not intents - it cannot express "you may create a Postgres, but only small, only in these subnets, always encrypted, always tagged".
 
-**The indirection is the answer.** The developer's permission is `create postgresinstances in namespace team-payments`. That is checked by your control plane's RBAC. The composition or controller then decides what cloud resources that means, applying your naming, network placement, encryption, tagging, and backup policy as non-negotiable parts of the expansion. The developer cannot express a non-compliant request because the interface has no field for it.
+**The indirection is the answer.** The developer's permission is `create postgresinstances in namespace team-payments`. (In Crossplane v2 that object is a namespaced composite resource created directly, with no separate claim kind; "claim" here means any such platform request.) That is checked by your control plane's RBAC. The composition or controller then decides what cloud resources that means, applying your naming, network placement, encryption, tagging, and backup policy as non-negotiable parts of the expansion. The developer cannot express a non-compliant request because the interface has no field for it.
 
-**Where the cloud credential lives.** In the controller, obtained through workload identity federation - the controller's service account exchanges a signed token for short-lived credentials. There is no long-lived key anywhere. This is a single, auditable, tightly scoped identity rather than one per team, and it is the only thing in the system with broad provisioning rights.
+**Where the cloud credential lives.** In the controller, obtained through workload identity - EKS Pod Identity (or IRSA), Workload Identity Federation for GKE, or Microsoft Entra Workload ID - so the controller's service account exchanges a signed token for short-lived credentials. There is no long-lived key anywhere. This is a single, auditable, tightly scoped identity rather than one per team, and it is the only thing in the system with broad provisioning rights.
 
-**Least privilege still applies to the controller.** It should be scoped by resource naming prefix, by tag condition, and by region - so even a compromised or buggy controller cannot touch resources outside the platform's namespace. And separate controllers or provider configurations per environment, so the production credential is not reachable from a development cluster.
+**Least privilege still applies to the controller.** It should be scoped by resource naming prefix, by tag condition, and by region - so even a compromised or buggy controller cannot touch resources outside the platform's namespace. And separate controllers or provider configurations per environment, so the production credential is not reachable from a development cluster. Crossplane v2's namespaced `ProviderConfig` goes further, letting you pin a tenant namespace to its own cloud account.
 
 **Guardrails belong at three points, not one.** Schema validation rejects impossible requests immediately. Admission policy enforces organisational rules the schema cannot express - budget approval for large sizes, no production claims outside a change window. The composition applies mandatory defaults that no request can override. Layering these means a request has to pass your rules three times before a cloud API is called.
 
@@ -74,12 +74,14 @@ rules:
 
 ```yaml
 # The controller's cloud identity - federated, short-lived, and bounded.
-apiVersion: aws.upbound.io/v1beta1
-kind: ProviderConfig
+# Crossplane v2 namespaced managed resources use the .m. API group and a
+# ClusterProviderConfig (platform-wide) or ProviderConfig (per namespace).
+apiVersion: aws.m.upbound.io/v1beta1
+kind: ClusterProviderConfig
 metadata: { name: production }
 spec:
   credentials:
-    source: IRSA # OIDC federation; no access key exists to leak
+    source: PodIdentity # EKS Pod Identity; IRSA also works. No access key to leak
 ---
 # The mandatory parts of the expansion. A developer cannot override these
 # because the claim schema exposes no field for them.
