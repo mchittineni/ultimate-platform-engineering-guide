@@ -1,6 +1,6 @@
 ---
 title: "How do you run an incident when the platform itself is the incident?"
-id: 107
+id: 208
 category: "Platform Reliability"
 difficulty: "Advanced"
 tags:
@@ -30,7 +30,7 @@ tags:
 
 The last row is the one people forget: if your only route to production is the GitOps controller and the controller is the problem, you cannot deploy the fix. A documented direct-apply path, used rarely and audited, is the answer.
 
-**Communication is half the job.** Fifty teams are blocked, most cannot tell whether it is them or you, and in the absence of information each will open its own escalation. Frequent, specific updates on a fixed cadence - what is affected, what is not, what to do meanwhile, when the next update comes - reduce the incident's cost more than almost any technical action. "We are investigating" repeated hourly does not; naming which capabilities are degraded and which are unaffected does.
+**Communication is half the job.** Fifty teams are blocked, most cannot tell whether it is them or you, and in the absence of information each will open its own escalation. Frequent, specific updates on a fixed cadence - what is affected, what is not, what to do meanwhile, when the next update comes - reduce the incident's cost more than almost any technical action. "We are investigating" repeated hourly does not; naming which capabilities are degraded and which are unaffected does. In regulated organisations, part of that communication has a statutory clock: under EU DORA a major ICT incident at a financial entity needs an initial notification within 4 hours of classifying it as major (and no later than 24 hours after becoming aware), and NIS2 requires an early warning within 24 hours for significant incidents. Decide who classifies platform incidents against those criteria before one happens, because the commander will not have time to research it.
 
 **Tell teams what still works.** During a control-plane outage, running workloads are usually fine - so the correct message is "you cannot deploy, your production traffic is unaffected". Without that, teams assume the worst and start taking unnecessary action, which frequently makes things worse.
 

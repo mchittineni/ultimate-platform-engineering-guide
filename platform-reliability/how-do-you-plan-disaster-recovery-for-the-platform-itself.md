@@ -1,6 +1,6 @@
 ---
 title: "How do you plan disaster recovery for the platform itself?"
-id: 109
+id: 210
 category: "Platform Reliability"
 difficulty: "Advanced"
 tags:
@@ -40,7 +40,7 @@ tags:
 
 **Set targets per capability, not one for the platform.** Restoring the ability to serve traffic is urgent; restoring the ability to deploy is important but tolerable for longer; restoring the portal is not urgent at all. Stating recovery objectives per capability is what makes the plan proportionate and affordable.
 
-**Rehearse, and time it.** Rebuild a cluster from Git in a scratch account on a schedule, and record how long it takes and what needed manual intervention. Every rehearsal finds something - a bootstrap secret nobody documented, a component whose installation order matters, a hard-coded reference to the old cluster's name. A plan that has never been executed is a document, not a capability.
+**Rehearse, and time it.** Rebuild a cluster from Git in a scratch account on a schedule, and record how long it takes and what needed manual intervention. Every rehearsal finds something - a bootstrap secret nobody documented, a component whose installation order matters, a hard-coded reference to the old cluster's name. A plan that has never been executed is a document, not a capability. In regulated sectors it is also a compliance gap: the EU's Digital Operational Resilience Act (DORA), applying to financial entities since 17 January 2025, requires ICT response and recovery plans to be tested at least yearly and backups to be restored using systems physically and logically segregated from the source, and a timed rehearsal log is the evidence it asks for.
 
 ## Example
 

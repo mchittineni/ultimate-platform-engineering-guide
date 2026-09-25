@@ -1,6 +1,6 @@
 ---
 title: "How do you run on-call for a platform team?"
-id: 106
+id: 203
 category: "Platform Reliability"
 difficulty: "Intermediate"
 tags:

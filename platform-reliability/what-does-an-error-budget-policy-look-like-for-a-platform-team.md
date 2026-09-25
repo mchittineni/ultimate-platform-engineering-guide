@@ -1,6 +1,6 @@
 ---
 title: "What does an error budget policy look like for a platform team?"
-id: 105
+id: 207
 category: "Platform Reliability"
 difficulty: "Advanced"
 tags:

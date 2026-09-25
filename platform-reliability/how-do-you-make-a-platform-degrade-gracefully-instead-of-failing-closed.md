@@ -1,6 +1,6 @@
 ---
 title: "How do you make a platform degrade gracefully instead of failing closed?"
-id: 108
+id: 209
 category: "Platform Reliability"
 difficulty: "Advanced"
 tags:
@@ -17,7 +17,7 @@ tags:
 
 **The principle: a control-plane failure should stop change, not stop serving.** Running workloads should continue when the reconciler, the provisioning controller, the portal, or the pipeline is unavailable. If any of those can take down production traffic, a management component has acquired data-plane blast radius and that is a design error rather than bad luck.
 
-**The classic failure is a fail-closed admission webhook.** A validating webhook with `failurePolicy: Fail` on Pods means that when the webhook is unreachable, no Pod can be created anywhere - including the webhook's own replacement Pods, and including anything needed to fix it. It is self-amplifying: the outage prevents the recovery. Three mitigations, and you want all of them: make the webhook genuinely highly available, exclude its own namespace and kube-system with a `namespaceSelector`, and keep a documented, rehearsed procedure to delete the configuration.
+**The classic failure is a fail-closed admission webhook.** A validating webhook with `failurePolicy: Fail` on Pods means that when the webhook is unreachable, no Pod can be created anywhere - including the webhook's own replacement Pods, and including anything needed to fix it. It is self-amplifying: the outage prevents the recovery. Three mitigations, and you want all of them: make the webhook genuinely highly available, exclude its own namespace and kube-system with a `namespaceSelector`, and keep a documented, rehearsed procedure to delete the configuration. Where the policy can be expressed in CEL, a ValidatingAdmissionPolicy (GA since Kubernetes 1.30) removes the problem altogether, because it is evaluated inside the API server rather than by a separate service that can be unreachable - which is why moving simple validation rules off webhooks is now the default recommendation.
 
 **Fail-closed is sometimes correct, and the answer must acknowledge that.** For a control you must never bypass - image signature verification in a regulated environment - allowing workloads through unverified may be worse than blocking them. The point is that this must be a deliberate, documented decision with the availability investment and break-glass to match, not a default nobody examined.
 
