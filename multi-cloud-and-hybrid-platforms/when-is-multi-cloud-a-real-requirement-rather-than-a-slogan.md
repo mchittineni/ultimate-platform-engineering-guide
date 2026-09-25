@@ -1,6 +1,6 @@
 ---
 title: "When is multi-cloud a real requirement rather than a slogan?"
-id: 99
+id: 190
 category: "Multi-Cloud and Hybrid Platforms"
 difficulty: "Intermediate"
 tags:
@@ -17,10 +17,10 @@ tags:
 
 **The genuine drivers, and each is externally imposed:**
 
-- **Regulatory or contractual.** A regulator, or a large customer's procurement terms, requires a named provider or a jurisdiction only one serves. Not arguable, and it is the most common real reason.
+- **Regulatory or contractual.** A regulator, or a large customer's procurement terms, requires a named provider or a jurisdiction only one serves. Not arguable, and it is the most common real reason. Read the regulation carefully, though: the EU's DORA, for example, requires financial entities to manage concentration risk and hold tested exit strategies for critical ICT providers - it does not require running on two clouds.
 - **Acquisition.** You bought a company running elsewhere. Migration has a cost and a risk; sometimes running both is the rational answer for years.
 - **A capability that exists in one place.** A specific managed service, a hardware type, or a partner integration with no adequate equivalent.
-- **Sovereignty.** Data or operations must be under a specific national or provider-independent control regime.
+- **Sovereignty.** Data or operations must be under a specific national or provider-independent control regime. Note that provider sovereign offerings - such as the AWS European Sovereign Cloud (generally available since January 2026) or partner-operated sovereign clouds - can sometimes meet this within a single provider relationship, so check them before assuming a second provider is needed.
 
 **The reasons that usually do not survive examination:**
 

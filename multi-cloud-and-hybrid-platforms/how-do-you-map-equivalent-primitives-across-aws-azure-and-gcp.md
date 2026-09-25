@@ -1,6 +1,6 @@
 ---
 title: "How do you map equivalent primitives across AWS, Azure, and GCP?"
-id: 101
+id: 191
 category: "Multi-Cloud and Hybrid Platforms"
 difficulty: "Intermediate"
 tags:
@@ -25,26 +25,28 @@ tags:
 
 **The mapping worth carrying, by role:**
 
-| Role                     | AWS                    | Azure                       | GCP                     |
-| ------------------------ | ---------------------- | --------------------------- | ----------------------- |
-| Isolation / billing unit | Account                | Subscription                | Project                 |
-| Grouping for policy      | Organisational unit    | Management group            | Folder                  |
-| Guardrail mechanism      | Service control policy | Azure Policy                | Organisation policy     |
-| Managed Kubernetes       | EKS                    | AKS                         | GKE                     |
-| Serverless containers    | Fargate / App Runner   | Container Apps              | Cloud Run               |
-| Functions                | Lambda                 | Functions                   | Cloud Functions / Run   |
-| Object storage           | S3                     | Blob Storage                | Cloud Storage           |
-| Managed relational       | RDS / Aurora           | Azure SQL / PostgreSQL      | Cloud SQL / AlloyDB     |
-| Queue                    | SQS                    | Service Bus / Storage Queue | Pub/Sub                 |
-| Secret storage           | Secrets Manager        | Key Vault                   | Secret Manager          |
-| Workload identity        | IRSA / Pod Identity    | Entra Workload ID           | Workload Identity       |
-| Private service access   | VPC endpoints          | Private endpoints           | Private Service Connect |
-| Private DNS              | Route 53 private zones | Private DNS zones           | Cloud DNS private zones |
-| Managed observability    | CloudWatch             | Azure Monitor               | Cloud Operations        |
+| Role                     | AWS                        | Azure                       | GCP                          |
+| ------------------------ | -------------------------- | --------------------------- | ---------------------------- |
+| Isolation / billing unit | Account                    | Subscription                | Project                      |
+| Grouping for policy      | Organisational unit        | Management group            | Folder                       |
+| Guardrail mechanism      | SCP / RCP                  | Azure Policy                | Organisation policy          |
+| Managed Kubernetes       | EKS                        | AKS                         | GKE                          |
+| Serverless containers    | Fargate / ECS Express Mode | Container Apps              | Cloud Run                    |
+| Functions                | Lambda                     | Functions                   | Cloud Run functions          |
+| Object storage           | S3                         | Blob Storage                | Cloud Storage                |
+| Managed relational       | RDS / Aurora               | Azure SQL / PostgreSQL      | Cloud SQL / AlloyDB          |
+| Queue                    | SQS                        | Service Bus / Storage Queue | Pub/Sub                      |
+| Secret storage           | Secrets Manager            | Key Vault                   | Secret Manager               |
+| Workload identity        | EKS Pod Identity / IRSA    | Entra Workload ID           | Workload Identity Federation |
+| Private service access   | VPC endpoints              | Private endpoints           | Private Service Connect      |
+| Private DNS              | Route 53 private zones     | Private DNS zones           | Cloud DNS private zones      |
+| Managed observability    | CloudWatch                 | Azure Monitor               | Google Cloud Observability   |
+
+Two rows have moved recently: AWS App Runner stopped accepting new customers on 30 April 2026 (existing users keep it, with no new features), and AWS points new simple container workloads at Amazon ECS Express Mode instead; and Google renamed Cloud Functions to Cloud Run functions, which now run on the Cloud Run platform.
 
 **Use the mapping for reasoning, not for design.** It is genuinely useful for transferring knowledge, for a comparative interview answer, and for scoping a migration. It is dangerous as the basis of an abstraction layer, because the rows that look equivalent hide the semantic differences that actually break applications.
 
-**The guardrail row is the one people misjudge most.** Service control policies bound the maximum available permissions and grant nothing. Azure Policy can deny, audit, and also remediate by deploying or modifying resources. GCP organisation policies constrain resource configuration. These are three different capabilities - Azure Policy's ability to fix rather than reject has no direct counterpart, and designing as though they are the same mechanism leads to a guardrail strategy that does not translate.
+**The guardrail row is the one people misjudge most.** Service control policies bound the maximum available permissions of principals and grant nothing; resource control policies (RCPs) apply the same idea to resources, capping what can be done to them regardless of who asks - for example, blocking access from identities outside the organisation. Azure Policy can deny, audit, and also remediate by deploying or modifying resources. GCP organisation policies constrain resource configuration. These are three different capabilities - Azure Policy's ability to fix rather than reject has no direct counterpart, and designing as though they are the same mechanism leads to a guardrail strategy that does not translate.
 
 **Be honest about what does not map at all.** Higher-level managed platform services - analytics, machine learning, data warehousing - have no adequate equivalents, and pretending otherwise is how migration estimates go badly wrong. Those are rebuilds, not ports.
 

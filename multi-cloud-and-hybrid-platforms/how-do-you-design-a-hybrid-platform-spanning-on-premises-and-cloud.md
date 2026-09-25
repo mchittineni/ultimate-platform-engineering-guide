@@ -1,6 +1,6 @@
 ---
 title: "How do you design a hybrid platform spanning on-premises and cloud?"
-id: 102
+id: 195
 category: "Multi-Cloud and Hybrid Platforms"
 difficulty: "Advanced"
 tags:
@@ -34,7 +34,9 @@ tags:
 
 **Be honest about capability gaps rather than papering over them.** On-premises typically has no managed database, no elastic scaling, no serverless option, and slower provisioning. The platform should present those gaps clearly - "a database here is operated by the platform team with these characteristics" - rather than offering an interface that looks identical and behaves differently. False equivalence is worse than a documented difference.
 
-**Consider the vendor extensions.** All three major providers offer ways to run their control plane or services on your hardware. These can genuinely narrow the capability gap at the cost of dependency on that provider in your own data centre, which is a trade to make deliberately - and it does not remove the link constraint.
+**Consider the vendor extensions.** All three major providers offer ways to run their control plane or services on your hardware - AWS Outposts and EKS Hybrid Nodes (on-premises machines joined as nodes to an EKS control plane in the cloud), Azure Local (formerly Azure Stack HCI) and Azure Arc, and Google Distributed Cloud in connected and air-gapped forms. These can genuinely narrow the capability gap at the cost of dependency on that provider in your own data centre, which is a trade to make deliberately - and it does not remove the link constraint.
+
+**Check the licence and maintenance status of anything you self-host.** On-premises is where open-source substitutes for managed services cluster, and they change underneath you: the MinIO community edition, once the default S3-compatible store for on-premises estates, went into maintenance mode in December 2025 and its repository was archived in 2026. Treat each self-hosted substitute as a dependency with an owner and an exit plan.
 
 ## Example
 
@@ -58,7 +60,7 @@ One interface, two sets of capabilities, one link between them.
                           means a hardware decision
     load balancing        appliance-based; VIP         managed LB, per-service
                           allocation is a request
-    object storage        MinIO or an appliance        native, effectively unlimited
+    object storage        Ceph RGW or an S3 appliance  native, effectively unlimited
     serverless            none                         available
     provisioning time     hours to weeks for capacity  minutes
 

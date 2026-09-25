@@ -1,6 +1,6 @@
 ---
 title: "What does a genuinely portable platform abstraction cost you?"
-id: 100
+id: 194
 category: "Multi-Cloud and Hybrid Platforms"
 difficulty: "Advanced"
 tags:
@@ -41,7 +41,7 @@ The practical conclusion: adopt the cheap rows because they are good engineering
 
 **Wrap the exit-expensive pieces rather than abstracting everything.** Identify what would actually be hard to leave - a proprietary targeting language, a deeply embedded data model, an identity integration - and put a thin interface in front of those specifically. That is a much better use of effort than a uniform abstraction over everything, because it concentrates the work where the switching cost actually is.
 
-**Keep an exit assessment instead of building for exit.** Documenting what it would take to move each capability, refreshed periodically, gives you the negotiating position and the risk visibility that most people want from portability, at a tiny fraction of the cost.
+**Keep an exit assessment instead of building for exit.** Documenting what it would take to move each capability, refreshed periodically, gives you the negotiating position and the risk visibility that most people want from portability, at a tiny fraction of the cost. In regulated European sectors it is increasingly expected anyway: DORA requires financial entities to hold documented exit strategies for critical ICT providers - an exit plan, not a second running estate.
 
 ## Example
 
