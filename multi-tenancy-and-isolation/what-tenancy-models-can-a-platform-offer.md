@@ -1,6 +1,6 @@
 ---
 title: "What tenancy models can a platform offer?"
-id: 24
+id: 45
 category: "Multi-Tenancy and Isolation"
 difficulty: "Intermediate"
 tags:
@@ -17,19 +17,20 @@ tags:
 
 **The spectrum, from weakest to strongest:**
 
-| Model                         | Boundary               | Isolation strength | Cost and utilisation         |
-| ----------------------------- | ---------------------- | ------------------ | ---------------------------- |
-| Shared process                | Application logic      | Weakest            | Best utilisation             |
-| Shared cluster, namespace     | Kubernetes RBAC, quota | Soft               | Very good                    |
-| Shared cluster, node pool     | Node boundary          | Moderate           | Good, some stranded capacity |
-| Cluster per tenant            | Control plane          | Strong             | Poor - fixed cost each       |
-| Account or project per tenant | Cloud IAM boundary     | Strongest          | Poorest, highest overhead    |
+| Model                           | Boundary               | Isolation strength  | Cost and utilisation         |
+| ------------------------------- | ---------------------- | ------------------- | ---------------------------- |
+| Shared process                  | Application logic      | Weakest             | Best utilisation             |
+| Shared cluster, namespace       | Kubernetes RBAC, quota | Soft                | Very good                    |
+| Shared cluster, virtual cluster | Per-tenant API server  | Soft (shared nodes) | Very good                    |
+| Shared cluster, node pool       | Node boundary          | Moderate            | Good, some stranded capacity |
+| Cluster per tenant              | Control plane          | Strong              | Poor - fixed cost each       |
+| Account or project per tenant   | Cloud IAM boundary     | Strongest           | Poorest, highest overhead    |
 
-**Namespaces are a soft boundary, and this is the point interviewers probe.** A namespace scopes names and gives you RBAC and quota targets. It does not, by itself, isolate the network, prevent resource contention, or protect against a container escape - because tenants still share a kernel and a control plane. Namespaces plus network policy, resource quotas, limit ranges, and admission control are a reasonable boundary between _trusted_ tenants. They are not a boundary against a hostile tenant.
+**Namespaces are a soft boundary, and this is the point interviewers probe.** A namespace scopes names and gives you RBAC and quota targets. It does not, by itself, isolate the network, prevent resource contention, or protect against a container escape - because tenants still share a kernel and a control plane. Namespaces plus network policy, resource quotas, limit ranges, and admission control - including Pod Security Admission enforcing the `restricted` profile - are a reasonable boundary between _trusted_ tenants. They are not a boundary against a hostile tenant.
 
 **Trust level is the decisive variable.** Internal teams are semi-trusted: they might deploy a memory leak, not an exploit. Between semi-trusted tenants, soft multi-tenancy is appropriate and by far the most economical. If your tenants are genuinely untrusted - running customer-supplied code, for instance - then you need either a hard boundary or sandboxed runtimes such as gVisor or Kata Containers, and saying so distinguishes a real answer from a checklist.
 
-**The control plane is a shared resource too.** Tenants in one cluster share the API server and etcd. A tenant generating enormous watch traffic, creating thousands of objects, or hammering the API can degrade everyone - a failure mode that namespaces do nothing about, and which API priority and fairness plus object-count quotas exist to mitigate.
+**The control plane is a shared resource too.** Tenants in one cluster share the API server and etcd. A tenant generating enormous watch traffic, creating thousands of objects, or hammering the API can degrade everyone - a failure mode that namespaces do nothing about, and which API priority and fairness plus object-count quotas exist to mitigate. Virtual clusters such as vCluster now fill this gap for tenants who need their own API server or CRDs: each gets a separate control plane while still scheduling onto shared nodes - see [How do virtual clusters change the tenancy trade-off?](./how-do-virtual-clusters-change-the-tenancy-trade-off.md).
 
 **What actually forces a hard boundary:**
 

@@ -1,6 +1,6 @@
 ---
 title: "How do you stop one tenant degrading another?"
-id: 26
+id: 50
 category: "Multi-Tenancy and Isolation"
 difficulty: "Advanced"
 tags:
@@ -35,6 +35,8 @@ tags:
 The first two rows are the distinctly platform-level ones, and they are why compute quotas alone do not make a cluster safely multi-tenant.
 
 **Priority classes decide who loses.** Under real contention something must be evicted, and the default is effectively arbitrary. Map your service tiers to priority classes so a tier-3 batch job is preempted before a tier-1 API. Also set a preemption policy deliberately - a low-priority job that can preempt nothing is much safer.
+
+**Batch and GPU work needs queueing, not just quota.** A ResourceQuota rejects a job outright when a tenant is over its allowance; it cannot hold the job until capacity frees up or lend one tenant's idle GPUs to another. Kueue adds that layer: tenants submit to a LocalQueue backed by a ClusterQueue with a nominal quota, cohorts let idle quota be borrowed and reclaimed, and jobs are admitted only when their full resource set fits. With GPUs increasingly requested through Dynamic Resource Allocation (GA in Kubernetes 1.34), queue-level fair sharing is the usual answer to one tenant's training run starving everyone else's inference.
 
 **Pod disruption budgets protect availability during voluntary disruption**, which is the case you cause: node drains during upgrades and scaling events. Without one, a drain can remove every replica of a service at once. A platform should generate these by default from the tier rather than trusting each team to remember.
 
