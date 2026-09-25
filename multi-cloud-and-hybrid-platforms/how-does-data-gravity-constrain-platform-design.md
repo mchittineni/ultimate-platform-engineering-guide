@@ -1,6 +1,6 @@
 ---
 title: "How does data gravity constrain platform design?"
-id: 103
+id: 196
 category: "Multi-Cloud and Hybrid Platforms"
 difficulty: "Advanced"
 tags:
@@ -17,7 +17,7 @@ tags:
 
 **The mechanism.** Data accumulates in one place; the systems that use it are drawn to it because moving compute is cheap and moving data is not. Over time more services attach to the dataset, integrations multiply, and the cost and risk of relocating it rise faster than the data itself grows. The practical consequence is that the location of your primary datastore is one of the most durable decisions your platform will make.
 
-**Egress pricing is what makes it asymmetric.** Getting data into a provider is typically free; getting it out costs per gigabyte, and cross-region and cross-zone transfer also carry charges. This means the economics of a migration worsen as the dataset grows, and it means that a design where a hot path crosses a billing boundary has an ongoing cost that scales with traffic rather than with the size of the estate.
+**Egress pricing is what makes it asymmetric.** Getting data into a provider is typically free; getting it out costs per gigabyte, and cross-region and cross-zone transfer also carry charges. This means the economics of a migration worsen as the dataset grows, and it means that a design where a hot path crosses a billing boundary has an ongoing cost that scales with traffic rather than with the size of the estate. In the EU, the Data Act softens the exit side: from 12 January 2027 providers may no longer charge switching or egress fees for a customer moving to another provider, though egress for ongoing parallel use of several clouds is still charged. That makes a one-off exit cheaper, but the time and risk of moving a large dataset remain, and it does nothing for a hot path that crosses a boundary every day.
 
 **Where it constrains platform decisions:**
 
