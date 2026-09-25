@@ -1,6 +1,6 @@
 ---
 title: "What is account vending and how do you automate it?"
-id: 81
+id: 156
 category: "AWS Platform Engineering"
 difficulty: "Advanced"
 tags:
@@ -21,7 +21,7 @@ tags:
 
 **Build it as a declarative request reconciled by automation.** An `Account` object naming the workload, the environment, the owning team, the cost centre, and the tier; a controller or pipeline that creates the account and applies every baseline; and continuous reconciliation so accounts created a year ago gain this year's baseline. The reconciliation matters as much as the creation - a vending pipeline that only runs once leaves you with accounts at different baselines and no way to tell which.
 
-**Use the managed tooling where it fits.** AWS Control Tower provides a landing zone with account factory, guardrails, and baseline configuration, and for many organisations adopting it is faster and safer than building equivalents. Its cost is opinionated structure and less flexibility - so the honest position is to use it unless you have a specific requirement it blocks, and be able to say what that requirement would be.
+**Use the managed tooling where it fits.** AWS Control Tower provides a landing zone with Account Factory, a catalogue of preventive, detective, and proactive controls, and baseline configuration, and for many organisations adopting it is faster and safer than building equivalents. Account Factory for Terraform (AFT) turns it into the declarative, Git-driven flow described here, with your own customisations applied after creation. Its cost is opinionated structure and less flexibility, though landing zone 4.0 (November 2025) loosened that considerably by making the Config, CloudTrail, and Backup integrations optional and dropping the mandatory Security OU - so the honest position is to use it unless you have a specific requirement it blocks, and be able to say what that requirement would be. See [what Control Tower sets up](./what-does-aws-control-tower-set-up-for-a-platform.md) for the detail.
 
 **Tag at creation, or cost attribution and offboarding both fail.** Owner, cost centre, environment, workload, and data classification applied to the account itself and propagated as defaults. Retrofitting tags across an account's resources later is tedious and never complete.
 
@@ -57,6 +57,7 @@ this year's baseline automatically.
 
   IDENTITY
     federation from the identity provider; ZERO IAM users created
+    root credentials never set (centralised root access management)
     permission sets: team-payments-admin (non-prod), team-payments-readonly (prod),
                      platform-admin, break-glass (time-bound)
   LOGGING AND AUDIT
@@ -111,7 +112,7 @@ Vending and closure, timed:
                                                              the address space
     [5/7] budget closed, quotas released
     [6/7] moved to OU Suspended (deny-almost-all), 30-day cooling-off
-    [7/7] inventory marked closed; scheduled for closure 2026-09-10
+    [7/7] inventory marked closed; scheduled for closure 2026-11-02
 ```
 
 ## Interview tips

@@ -1,6 +1,6 @@
 ---
 title: "How do you structure a multi-account AWS platform?"
-id: 80
+id: 155
 category: "AWS Platform Engineering"
 difficulty: "Advanced"
 tags:
@@ -31,6 +31,8 @@ tags:
 | Suspended           | Accounts being decommissioned                | Deny nearly everything                                 |
 
 **Service control policies are guardrails, not permissions.** They set the maximum available permissions in an account and cannot grant anything. The high-value ones are: deny use of the root user, deny disabling of CloudTrail, GuardDuty, or Config, deny regions you do not operate in, deny deletion of specific protected resources, and require encryption. Keep them few and coarse - service control policies are hard to debug, because the resulting failure is an access denial with little explanation, and a badly scoped one can break a whole organisational unit.
+
+**Pair them with the newer organisation-level controls.** Resource control policies (RCPs) are the resource-side counterpart to SCPs: attached to the same tree, they cap what any principal - including one from outside the organisation - can do to your S3 buckets, KMS keys, roles, queues, and a growing list of other services, which makes them the natural way to enforce a data perimeter centrally. Declarative policies pin service configuration, such as blocking public AMI and snapshot sharing or requiring IMDSv2, in a way that holds even as new APIs appear. And centralised root access management lets you remove root credentials from member accounts entirely, performing the rare root-only task from the management or a delegated account instead - a stronger position than an SCP denying root use.
 
 **Centralise the things that only make sense once.** Logging to a dedicated archive account with restricted access, identity through your provider federated centrally so nobody has IAM users, networking via a transit gateway or shared VPC subnets from the infrastructure account, and image and artefact registries shared. Duplicating these per account produces drift and cost.
 
@@ -67,7 +69,9 @@ Organisation layout - shaped by the policies applied, not the org chart.
   └── OU: Suspended                     SCP: deny all except read + delete
 
   Centralised once, not per account:
-    identity      federated from the identity provider; zero IAM users anywhere
+    identity      federated from the identity provider; zero IAM users anywhere;
+                  member-account root credentials removed (centralised root access)
+    perimeter     RCP at the root: org resources unusable by outside principals
     logging       all CloudTrail + Config to log-archive, which nobody can write to
     networking    transit gateway attachment + central egress from network-prod
     registry      shared-services, cross-account pull with a resource policy
@@ -122,6 +126,7 @@ Organisation layout - shaped by the policies applied, not the org chart.
 - The core claim: on AWS the account is the only boundary that simultaneously bounds quotas, blast radius, and IAM reach - and IAM-based separation within one account always leaks eventually.
 - "Shape organisational units around the policies you apply, not the org chart" is the design principle, and it explains why org-chart-shaped structures need constant reshaping.
 - Be precise that service control policies bound maximum permissions and grant nothing. Then name the high-value ones: root denial, audit-trail protection, region restriction, encryption requirements.
+- Mention RCPs alongside SCPs - SCPs bound your principals, RCPs bound access to your resources - and centralised root access management as the modern answer to root credentials in member accounts. It shows your knowledge is current. For the fundamentals, see [Organizations and SCPs](./what-are-aws-organizations-and-service-control-policies.md).
 - Warn that service control policies are hard to debug because the failure is a bare access denial, and that this argues for keeping them few and coarse.
 - Centralising logging, identity, networking, and registries is what stops per-account duplication and drift - and the log archive being unwritable by the accounts it audits is a specific, valuable detail.
 - Naming NAT gateway and cross-zone data transfer as the surprise cost lines, with centralised egress and VPC endpoints as the mitigation, shows operational experience.
