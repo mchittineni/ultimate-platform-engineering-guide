@@ -1,6 +1,6 @@
 ---
 title: "How do you use Bicep for platform modules and subscription vending?"
-id: 91
+id: 169
 category: "Azure Platform Engineering"
 difficulty: "Advanced"
 tags:
@@ -18,6 +18,8 @@ tags:
 **Bicep over ARM JSON, and know why.** Bicep compiles to ARM templates, so the deployment engine is identical, but the authoring experience is far better: modules, type checking, loops and conditions that are readable, and no JSON expression strings. There is no reason to author new ARM JSON, and being able to say Bicep is a transpiler rather than a different engine shows you understand what you are choosing.
 
 **Publish modules to a registry and consume by version.** A container registry can host Bicep modules, referenced as `br:<registry>/bicep/modules/<name>:<version>`. That gives you the property that matters: a team consumes a version, you release a new version, and consumers upgrade deliberately. Copying module files into each repository produces the same divergence problem as any copied template - you cannot improve them afterwards.
+
+**Build on Azure Verified Modules rather than writing every resource from scratch.** Azure Verified Modules (AVM) is Microsoft's supported library of Bicep and Terraform modules, published to the public registry as `br/public:avm/res/...` for single resources and `br/public:avm/ptn/...` for patterns, including `avm/ptn/lz/sub-vending` for subscription vending. The sensible split is that AVM supplies well-tested resource modules and your platform modules wrap them to set the opinions: naming, private networking, mandatory tags, and which parameters teams may touch. Pin AVM versions exactly, because most are still `0.x` and a minor bump can change the interface.
 
 **Scope is a first-class concept and choosing it correctly matters.** `targetScope` can be resource group, subscription, management group, or tenant. Vending needs subscription or management group scope; policy assignment needs management group scope to inherit properly. Getting this wrong is a common source of confusing deployment failures.
 
@@ -48,6 +50,10 @@ param size string = 'small'
 param tenant string
 
 param location string = resourceGroup().location
+
+// Supplied by the vending baseline, not chosen by the team
+param platformSubnetId string
+param platformDnsZoneId string
 
 // Size -> SKU is a platform decision, not a team decision
 var skuMap = {
@@ -96,6 +102,8 @@ module db 'br:acrplatform.azurecr.io/bicep/modules/postgres:3.2.0' = {
     workload: 'checkout'
     size: 'small'
     tenant: 'team-payments'
+    platformSubnetId: spoke.outputs.postgresSubnetId
+    platformDnsZoneId: hubPostgresDnsZoneId
   }
 }
 ```
@@ -154,7 +162,7 @@ Vending, driven by a declarative request and reconciled continuously:
 ## Interview tips
 
 - Say Bicep is a transpiler to ARM, so the engine is the same and the authoring experience is what improves. It shows you know what the choice actually is.
-- Publishing modules to a registry and consuming by version is the platform-team answer; copied module files produce the same divergence problem as any copied template.
+- Publishing modules to a registry and consuming by version is the platform-team answer; copied module files produce the same divergence problem as any copied template. Mention Azure Verified Modules as the base layer your opinionated modules wrap.
 - Deployment stacks are the highest-value thing to name here, because plain incremental deployments never delete anything and orphaned resources are the predictable result.
 - `what-if` posted on the pull request, with a check that fails on deletions of protected types, is the reviewable-plan discipline.
 - Getting `targetScope` right - management group for policy, subscription for vending - is a small precise point that signals real experience.
