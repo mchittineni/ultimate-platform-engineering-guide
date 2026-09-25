@@ -1,6 +1,6 @@
 ---
 title: "How do you keep platform components consistent across many clusters?"
-id: 37
+id: 65
 category: "Kubernetes Platform"
 difficulty: "Advanced"
 tags:
@@ -40,6 +40,8 @@ apiVersion: argoproj.io/v1alpha1
 kind: ApplicationSet
 metadata: { name: platform-policy-engine, namespace: argocd }
 spec:
+  goTemplate: true # Go templates: the recommended syntax in current Argo CD
+  goTemplateOptions: ["missingkey=error"] # a missing label fails loudly
   generators:
     - clusters:
         selector:
@@ -47,7 +49,7 @@ spec:
             platform.example.com/managed: "true"
   template:
     metadata:
-      name: "policy-engine-{{name}}"
+      name: "policy-engine-{{.name}}"
     spec:
       project: platform
       source:
@@ -59,9 +61,9 @@ spec:
           valueFiles:
             - values/base.yaml
             # Variation resolved from cluster labels, not per-cluster files
-            - "values/env-{{metadata.labels.platform\\.example\\.com/environment}}.yaml"
-            - "values/scope-{{metadata.labels.platform\\.example\\.com/compliance-scope}}.yaml"
-      destination: { server: "{{server}}", namespace: policy-system }
+            - 'values/env-{{ index .metadata.labels "platform.example.com/environment" }}.yaml'
+            - 'values/scope-{{ index .metadata.labels "platform.example.com/compliance-scope" }}.yaml'
+      destination: { server: "{{.server}}", namespace: policy-system }
       syncPolicy:
         automated: { prune: true, selfHeal: true } # selfHeal reverts manual drift
 ```
@@ -72,15 +74,15 @@ Fleet state - answerable in one query, which is the point of the whole design:
   $ platform fleet status
 
   CLUSTER            ENV      SCOPE     BUNDLE        DRIFT   K8S
-  mgmt-eu-1          mgmt     standard  v2026.07.3    0       1.31
-  mgmt-eu-2          mgmt     standard  v2026.07.3    0       1.31
-  prod-eu-1          prod     standard  v2026.08.1    0       1.32
-  prod-eu-2          prod     standard  v2026.08.1    2  <--  1.32
-  prod-us-1          prod     standard  v2026.08.1    0       1.32
-  prod-pci-eu-1      prod     pci       v2026.07.3    0       1.31
-  staging-eu-1       staging  standard  v2026.08.2    0       1.32
-  dev-eu-1           dev      standard  v2026.08.2    0       1.32
-  preview-eu-1       dev      standard  v2026.08.2    0       1.32
+  mgmt-eu-1          mgmt     standard  v2026.07.3    0       1.35
+  mgmt-eu-2          mgmt     standard  v2026.07.3    0       1.35
+  prod-eu-1          prod     standard  v2026.08.1    0       1.36
+  prod-eu-2          prod     standard  v2026.08.1    2  <--  1.36
+  prod-us-1          prod     standard  v2026.08.1    0       1.36
+  prod-pci-eu-1      prod     pci       v2026.07.3    0       1.35
+  staging-eu-1       staging  standard  v2026.08.2    0       1.36
+  dev-eu-1           dev      standard  v2026.08.2    0       1.36
+  preview-eu-1       dev      standard  v2026.08.2    0       1.36
 
   Wave in progress: v2026.08.2 in dev/staging, soaking. prod on v2026.08.1.
   mgmt intentionally trails - it is upgraded last.

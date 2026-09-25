@@ -1,6 +1,6 @@
 ---
 title: "How do you run a service mesh as a platform capability?"
-id: 36
+id: 64
 category: "Kubernetes Platform"
 difficulty: "Advanced"
 tags:
@@ -19,13 +19,15 @@ tags:
 
 **What it costs.** A control plane to run and upgrade, per-Pod resource overhead in the sidecar model, added latency on every hop, and a substantial increase in debugging difficulty - a request now traverses two proxies, and "is it the app, the proxy, or the policy?" becomes a routine question. Teams also lose the ability to reason about the network from first principles, which slows incident response until people learn the new mental model.
 
-**Sidecar versus sidecar-less is now a genuine architectural choice.** The sidecar model puts a proxy in every Pod: strongest feature set, highest overhead, and every application restart is coupled to proxy upgrades. Ambient or node-level approaches - Istio's ambient mode, Cilium's mesh - move L4 and mTLS into a shared per-node component and add L7 processing only where needed. The trade-off is lower overhead and decoupled upgrades against a shorter feature list and a larger shared failure domain per node. For a platform team, the decoupling of proxy upgrades from application restarts is the most valuable practical difference.
+**Sidecar versus sidecar-less is now a genuine architectural choice.** The sidecar model puts a proxy in every Pod: strongest feature set, highest overhead, and every application restart is coupled to proxy upgrades. Ambient or node-level approaches - Istio's ambient mode, Cilium's mesh - move L4 and mTLS into a shared per-node component and add L7 processing only where needed. The trade-off is lower overhead and decoupled upgrades against a shorter feature list and a larger shared failure domain per node. For a platform team, the decoupling of proxy upgrades from application restarts is the most valuable practical difference. Istio's ambient mode has been GA since Istio 1.24, so this is now a production choice rather than an experiment. Kubernetes native sidecar containers (GA in 1.33) fix sidecar start-up and shutdown ordering - no more Jobs that never finish because the proxy keeps running - but not the upgrade coupling.
 
 **Sidecar upgrades are the operational reality nobody plans for.** In the sidecar model, upgrading the mesh means restarting every Pod in the fleet. That must be waved, respect pod disruption budgets, and be coordinated with tenants - and it means version skew between the control plane and the data plane exists for as long as the rollout takes, so the supported skew window is a hard constraint on your rollout speed.
 
 **Failure posture must be deliberate.** If the control plane is unavailable, existing proxies should keep routing with their last configuration - that is the correct design and worth verifying rather than assuming. If a sidecar fails, that Pod is out of service. The genuinely dangerous case is a bad configuration push, which propagates to every proxy quickly; that argues for staged configuration rollout and for treating mesh configuration changes with production change control.
 
-**The platform must own the abstraction.** Expose intent - `mtls: strict`, `retries: 3`, `timeout: 2s`, `allowedCallers: [checkout]` - in the service specification and generate the mesh resources. If teams are writing `VirtualService` or `AuthorizationPolicy` by hand, you have added a large new API surface to every team's cognitive load and undone the reason for having a platform.
+**The platform must own the abstraction.** Expose intent - `mtls: strict`, `retries: 3`, `timeout: 2s`, `allowedCallers: [checkout]` - in the service specification and generate the mesh resources. If teams are writing `VirtualService`, `HTTPRoute`, or `AuthorizationPolicy` by hand, you have added a large new API surface to every team's cognitive load and undone the reason for having a platform.
+
+**Prefer the Gateway API for traffic rules.** Istio, Linkerd, and Cilium all support Gateway API routes for mesh traffic (the GAMMA initiative), and Istio recommends them over its own `VirtualService`, particularly in ambient mode, whose waypoints are designed around them. Generating standard `HTTPRoute`s rather than mesh-specific resources also makes a future change of mesh far cheaper; see [the Gateway API](./what-is-the-gateway-api-and-why-is-it-replacing-ingress.md).
 
 **Adopt incrementally.** Namespace by namespace, starting with permissive mTLS so unmeshed callers still work, then strict once all callers are meshed. Enabling strict mTLS globally on day one breaks everything that has not been onboarded, and it is the classic mesh adoption failure.
 
@@ -68,6 +70,8 @@ spec:
 ```yaml
 # What the platform generates. Note the L7 specificity - the thing network
 # policy cannot express, and often the actual justification for the mesh.
+# Sidecar mode shown. In ambient mode, L7 rules are enforced by a waypoint proxy
+# and the policy attaches with `targetRefs` to the Service instead of `selector`.
 apiVersion: security.istio.io/v1
 kind: AuthorizationPolicy
 metadata:
@@ -112,7 +116,7 @@ Adoption sequence that does not cause an outage:
 - Insist on naming the requirement first, and be ready to say a mesh is not justified - "network policy plus CNI-level encryption" is often the right, cheaper answer.
 - The sidecar-versus-ambient trade-off is the current live question. Framing it around decoupling proxy upgrades from application restarts is the platform-team perspective interviewers want.
 - Sidecar upgrades requiring a fleet-wide Pod restart, with version skew during the rollout, is the operational detail that shows you have run one.
-- Say firmly that developers never write mesh resources. If they are writing `VirtualService`, the platform failed.
+- Say firmly that developers never write mesh resources. If they are writing `VirtualService`, the platform failed. Where the platform does generate routing, generating Gateway API `HTTPRoute`s keeps the mesh replaceable.
 - The permissive-then-strict mTLS sequence is the concrete answer to "how would you adopt it?" and the global-strict-on-day-one mistake is worth naming.
 
 ---

@@ -1,6 +1,6 @@
 ---
 title: "How do you design node pools and scheduling for mixed workloads?"
-id: 32
+id: 58
 category: "Kubernetes Platform"
 difficulty: "Intermediate"
 tags:
@@ -20,14 +20,14 @@ tags:
 - **Different hardware** - GPUs, ARM versus x86, high-memory instances, local NVMe.
 - **Different interruption tolerance** - spot or preemptible capacity for workloads that can be killed, on-demand for those that cannot.
 - **A node-level boundary** - a tenant whose bursts were evicting neighbours, or a workload that must not share a kernel.
-- **Platform components** - a small on-demand pool for ingress controllers, CoreDNS, and telemetry agents, so they are never displaced by tenant workloads or preempted with spot capacity.
+- **Platform components** - a small on-demand pool for gateway and ingress controllers, CoreDNS, and telemetry agents, so they are never displaced by tenant workloads or preempted with spot capacity.
 - **Compliance** - nodes in a specific zone, or with a specific image.
 
 **Taint the pool, tolerate in the workload.** A taint means nothing schedules there unless it explicitly tolerates it. A common mistake is using only node selectors or affinity: that directs your workload to the pool but does nothing to stop other workloads landing on it, so your expensive GPU nodes fill with unrelated pods. Taints plus tolerations for exclusion, node affinity or selectors for attraction - both, not either.
 
 **Spot capacity needs to be designed for, not just selected.** Interruption handling means a termination handler that drains the node, pod disruption budgets so replicas are not all removed at once, spread across instance types and zones so one capacity shortage does not take everything, and a fallback to on-demand. A platform should express this as a tier property - "this workload tolerates interruption" - rather than making each team learn it.
 
-**Autoscaling has two layers, and they solve different problems.** The horizontal pod autoscaler adds Pods; the cluster autoscaler or a just-in-time provisioner such as Karpenter adds nodes. Both are needed, and the interesting failure is when Pods are pending because no node can host them - too large to fit any instance type, or blocked by a topology constraint that cannot be satisfied. Just-in-time provisioners reduce this by choosing an instance type to fit the pending Pods rather than scaling a fixed pool, which also improves bin-packing.
+**Autoscaling has two layers, and they solve different problems.** The horizontal pod autoscaler adds Pods; the cluster autoscaler or a just-in-time provisioner such as Karpenter adds nodes. Both are needed, and the interesting failure is when Pods are pending because no node can host them - too large to fit any instance type, or blocked by a topology constraint that cannot be satisfied. Just-in-time provisioners reduce this by choosing an instance type to fit the pending Pods rather than scaling a fixed pool, which also improves bin-packing. Karpenter (1.x, GA) also consolidates under-used nodes and, on AWS with its interruption queue configured, handles spot interruption notices itself, which removes the separate termination handler from the list above.
 
 **Bin-packing versus resilience is a genuine trade-off.** Tight packing saves money and increases the impact of losing one node. Topology spread constraints across nodes and zones cost some efficiency and are almost always worth it for anything user-facing - and should be a platform default derived from the service tier rather than an option teams remember.
 
@@ -41,7 +41,7 @@ tags:
 Four pools for one production cluster - each justified by a distinct need.
 
 POOL: system            on-demand, 3 nodes, taint platform=true:NoSchedule
-  runs: ingress controllers, CoreDNS, telemetry agents, policy webhooks
+  runs: gateway controllers, CoreDNS, telemetry agents, policy webhooks
   why:  platform components must never be preempted or displaced by tenants.
         This is the pool that keeps the cluster diagnosable during an incident.
 
@@ -58,6 +58,8 @@ POOL: gpu               on-demand, autoscaled 0-8, taint nvidia.com/gpu=true:NoS
   runs: inference and training
   why:  specialised expensive hardware; the taint is what stops ordinary pods
         occupying nodes that cost many times a general node.
+        Allocation within the pool: device plugin counts, or DRA claims
+        (GA in 1.34) when workloads must select GPUs by attribute.
 
 Deliberately absent: a pool per team. Node pools are a hardware and interruption
 boundary, not a tenancy boundary - tenancy is namespaces, quotas, and priority.
@@ -74,6 +76,7 @@ spec:
   template:
     spec:
       priorityClassName: tier-3-batch # loses first under contention
+      terminationGracePeriodSeconds: 120 # Pod-level field; spot reclaim: finish in-flight work
       tolerations:
         - key: interruptible # exclusion handled by the taint
           operator: Equal
@@ -95,7 +98,6 @@ spec:
           resources:
             requests: { cpu: "2", memory: 8Gi }
             limits: { memory: 10Gi } # memory limit set; CPU limit deliberately not
-          terminationGracePeriodSeconds: 120 # spot reclaim: finish in-flight work
 ```
 
 ## Interview tips
@@ -103,7 +105,7 @@ spec:
 - Give the four legitimate reasons for a pool, and state clearly that a pool is a hardware and interruption boundary, not a tenancy boundary. That distinction is frequently confused.
 - "Taints for exclusion, affinity for attraction - you need both" is the concrete technical point, along with why node selectors alone leave your GPU pool open to anything.
 - For spot, list what it actually requires - termination handling, disruption budgets, instance-type diversity, on-demand fallback. Candidates who just say "use spot to save money" have not run it.
-- Naming the pending-Pod failure mode, and just-in-time provisioning as the mitigation, shows real autoscaling experience.
+- Naming the pending-Pod failure mode, and just-in-time provisioning as the mitigation, shows real autoscaling experience. For the GPU pool specifically, see [running GPU and AI workloads](./how-do-you-run-gpu-and-ai-workloads-on-a-kubernetes-platform.md).
 - Close on the platform hiding all of it: `size` and `interruptible` in, tolerations and spread constraints out. If developers are learning taint syntax, the abstraction is missing.
 
 ---

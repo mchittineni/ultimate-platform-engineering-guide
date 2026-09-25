@@ -1,6 +1,6 @@
 ---
 title: "How do you upgrade a fleet of clusters without breaking tenants?"
-id: 33
+id: 62
 category: "Kubernetes Platform"
 difficulty: "Advanced"
 tags:
@@ -15,13 +15,14 @@ tags:
 
 ## Detail
 
-**Frequency reduces risk.** Upgrading often means small version jumps, familiar procedures, and skills that stay current. Organisations that upgrade rarely accumulate several versions of deprecations at once, and each upgrade becomes a project with high stakes - which encourages further delay. Kubernetes minor releases are frequent and support windows are finite, so the treadmill is not optional; the only choice is whether it is routine or traumatic.
+**Frequency reduces risk.** Upgrading often means small version jumps, familiar procedures, and skills that stay current. Organisations that upgrade rarely accumulate several versions of deprecations at once, and each upgrade becomes a project with high stakes - which encourages further delay. Kubernetes ships three minor releases a year and each is supported upstream for roughly fourteen months, so the treadmill is not optional - managed providers' paid extended support buys time, not safety; the only choice is whether it is routine or traumatic.
 
 **Pre-flight checks are where the real work is:**
 
-- **Removed and deprecated APIs.** Scan the manifests in Git and, importantly, what is actually stored in the cluster. Tools such as `kubent` or `pluto` do this. This single check prevents most tenant breakage.
+- **Removed and deprecated APIs.** Scan the manifests in Git and, importantly, what is actually stored in the cluster. Tools such as `pluto` or `kubent` do this, and managed offerings surface it too - EKS upgrade insights and GKE deprecation insights read the audit log for calls to removed APIs. This single check prevents most tenant breakage. Removals are not only API versions: recent releases removed the in-tree `gitRepo` volume type (1.36), for example.
 - **Component compatibility.** Every controller, CSI and CNI driver, admission webhook, and agent has a supported version range. A webhook that fails against a new API version can block all Pod creation.
 - **Deprecated feature gates and flags** that will be removed.
+- **Node prerequisites.** Since 1.35 the kubelet refuses to start on cgroup v1 by default, and 1.35 is the last release to support containerd 1.x - so an old node image can fail an upgrade that every API scan passed.
 - **Version skew rules.** Control plane and node versions may differ only within a supported window, which is why the order matters.
 - **Tenant readiness.** Do tier-1 workloads have disruption budgets and spread constraints? If they do not, node drains will hurt them.
 
@@ -33,27 +34,32 @@ tags:
 
 **Wave the fleet by risk.** Management cluster last or on its own carefully controlled path, then dev, staging, low-tier production, high-tier production, with a soak period between waves long enough for slow-burn problems to appear. Automation should execute the waves; a human should approve each promotion.
 
-**Communicate specifically.** Tenants need to know when their cluster is being upgraded, what could affect them, and what they must do. "We are upgrading Kubernetes next month" produces nothing; "your service `reporting-api` uses `policy/v1beta1 PodDisruptionBudget`, removed in this version - here is the pull request" produces action.
+**Communicate specifically.** Tenants need to know when their cluster is being upgraded, what could affect them, and what they must do. "We are upgrading Kubernetes next month" produces nothing; "your service `docs-site` mounts a `gitRepo` volume, removed in 1.36 - here is the pull request replacing it with a git-sync init container" produces action.
 
 **Have a rollback position and be honest about it.** Control-plane downgrades are generally not supported, so the realistic recovery for a bad control-plane upgrade is failing traffic to another cluster - which is another argument for the cluster-replacement model and for everything being reproducible from Git.
 
 ## Example
 
 ```text
-Fleet upgrade 1.31 -> 1.32, nine clusters, waved over three weeks.
+Fleet upgrade 1.35 -> 1.36, nine clusters, waved over three weeks.
 
 PRE-FLIGHT (before any cluster is touched)
-  $ platform fleet preflight --target 1.32
+  $ platform fleet preflight --target 1.36
 
-  removed APIs in use
-    ✗ team-reporting/reporting-api    policy/v1beta1 PodDisruptionBudget
-    ✗ team-data/etl-cron              batch/v1beta1 CronJob
-    -> 2 migration PRs auto-raised, with the exact diff. Blocking.
+  removed APIs and features in use
+    ✗ team-docs/docs-site             gitRepo volume (removed in 1.36)
+    ⚠ team-edge/legacy-lb             Service .spec.externalIPs (deprecated in 1.36)
+    -> migration PRs auto-raised, with the exact diff. gitRepo blocking.
+
+  node prerequisites
+    ✗ burst pool image                containerd 1.7 -> 1.36 needs containerd 2.x
+    ✓ all pools                       cgroup v2
+    -> roll the burst pool to the new node image first. Blocking.
 
   component compatibility
-    ✓ cilium 1.16.x        supports 1.32
-    ✗ csi-driver 2.4.1     max 1.31  -> upgrade driver first. Blocking.
-    ✓ kyverno 1.13.x       supports 1.32
+    ✓ cilium 1.19.x        supports 1.36
+    ✗ csi-driver 2.4.1     max 1.35  -> upgrade driver first. Blocking.
+    ✓ kyverno 1.16.x       supports 1.36
     ⚠ custom-webhook 0.9   untested  -> test in dev wave, non-blocking
 
   tenant readiness

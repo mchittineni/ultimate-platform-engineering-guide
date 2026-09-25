@@ -1,6 +1,6 @@
 ---
 title: "Why does Kubernetes end up as the substrate for most platforms?"
-id: 30
+id: 53
 category: "Kubernetes Platform"
 difficulty: "Beginner"
 tags:
@@ -26,17 +26,17 @@ tags:
 | Admission webhooks           | A policy enforcement point                   |
 | Namespaces and quotas        | Tenancy primitives                           |
 | Secrets and config plumbing  | Delivery of configuration to workloads       |
-| A large ecosystem            | Ingress, certificates, storage, telemetry    |
+| A large ecosystem            | Gateways, certificates, storage, telemetry   |
 
 The middle rows are the ones that matter for platform engineering. A custom resource plus a controller gives you a versioned, validated, authorised, reconciled API for anything - not only workloads. That is why Crossplane, cert-manager, Argo CD, and most modern platform tooling are all Kubernetes controllers: they are using it as an extensible control plane rather than as a container scheduler.
 
 **Reconciliation is the property that changes behaviour.** Declaring desired state and having a controller converge toward it continuously is fundamentally different from running a script. Drift is corrected rather than merely detected, operations are idempotent, and partial failures self-heal on the next loop. Building that reliably yourself is a serious undertaking, and it is the core of what a platform control plane does.
 
-**The ecosystem argument is real but secondary.** Ingress controllers, certificate automation, CSI drivers, policy engines, and telemetry agents exist and interoperate because they target the same API. That saves enormous integration effort - but it is a consequence of the extensible API, not a separate reason.
+**The ecosystem argument is real but secondary.** Gateway API implementations, certificate automation, CSI drivers, policy engines, and telemetry agents exist and interoperate because they target the same API. That saves enormous integration effort - but it is a consequence of the extensible API, not a separate reason.
 
 **The honest costs.** Kubernetes is complex, and that complexity is now your platform team's to absorb rather than eliminate: upgrades and version skew, networking that is genuinely hard to debug, resource management subtleties, and a large security surface. Managed control planes remove a meaningful portion of this but not the workload-layer complexity, which is where most of it lives.
 
-**When it is the wrong substrate.** If your workloads are a handful of stateless services, a PaaS or a serverless container runtime - Cloud Run, App Runner, Container Apps - gives you most of the outcome with a fraction of the operational burden. If you are entirely serverless functions and managed services, Kubernetes adds a cluster to run without a corresponding benefit. Being able to say "we chose Cloud Run and it was correct" is a sign of judgement rather than inexperience.
+**When it is the wrong substrate.** If your workloads are a handful of stateless services, a PaaS or a serverless container runtime - Cloud Run, Azure Container Apps, Amazon ECS Express Mode - gives you most of the outcome with a fraction of the operational burden. If you are entirely serverless functions and managed services, Kubernetes adds a cluster to run without a corresponding benefit. Being able to say "we chose Cloud Run and it was correct" is a sign of judgement rather than inexperience.
 
 **The nuance worth adding.** You can use Kubernetes as a control plane without running your workloads on it. A management cluster hosting Crossplane can provision serverless services, databases, and queues while nothing customer-facing runs in a Pod. That decoupling - Kubernetes as the API, not necessarily as the runtime - is the strongest version of this answer.
 
