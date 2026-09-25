@@ -1,6 +1,6 @@
 ---
 title: "How do you secure the software supply chain for everything the platform builds?"
-id: 69
+id: 129
 category: "Platform Security"
 difficulty: "Advanced"
 tags:
@@ -32,13 +32,17 @@ tags:
 
 **Provenance is the link people skip.** A signature says someone signed this. Provenance says which source commit, which builder, which workflow, and which parameters produced it - so you can require that production images come from your CI, from your repository, on a protected ref. That is a much stronger statement than "signed by someone with access to the key".
 
-**Keyless signing removes the key problem.** Signing with the CI workload's OIDC identity, recorded in a transparency log, means there is no signing key to steal or rotate, and verification asserts the identity and the issuer rather than a key you must distribute.
+**Keyless signing removes the key problem.** Signing with the CI workload's OIDC identity, recorded in a transparency log, means there is no signing key to steal or rotate, and verification asserts the identity and the issuer rather than a key you must distribute. Since cosign v3 the Sigstore bundle format - signature, certificate, and transparency-log proof in one object - is the default, so check that your verifiers and admission controller are recent enough to read it.
 
-**Admission verification is where the value is realised.** An admission policy that rejects images without a valid signature and provenance from the expected identity is what converts your build controls into a guarantee. Without it, all the signing is advisory and an image built anywhere can still run.
+**Use SLSA as the vocabulary.** SLSA v1.2 (November 2025) keeps the Build track levels from v1.0/v1.1 and adds a Source track for how code is authored and reviewed, so "Build L3 provenance from a protected branch" is now a statement you can make precisely. For SBOMs, standardise on one format - SPDX (3.0.1 is current) or CycloneDX (1.7 is current) - at a version your scanners and index can actually read.
+
+**Admission verification is where the value is realised.** An admission policy that rejects images without a valid signature and provenance from the expected identity is what converts your build controls into a guarantee. Without it, all the signing is advisory and an image built anywhere can still run. In Kyverno, set enforcement per rule with `failureAction` - the policy-wide `validationFailureAction` is deprecated - or use the newer CEL-based `ImageValidatingPolicy`; Sigstore's policy-controller is the other common choice.
 
 **The SBOM is only useful if it is queryable.** Generating one per build and attaching it to the image is the easy part. The value comes from an index you can query - "which running services contain this library at this version" - answered in minutes rather than days. That is the capability you will want the day a critical vulnerability is published.
 
 **Scan continuously, not only at build.** An image clean at build time becomes vulnerable when a new advisory lands. Rescanning the SBOMs of everything currently deployed, and alerting the owning team, is what closes the window between disclosure and detection.
+
+**Mind where the attestation lives and who signed it.** GitHub's artifact attestations are stored in GitHub's attestation API unless pushed to the registry, and those from private repositories are signed by GitHub's own Sigstore instance rather than the public one - so the admission verifier must be configured with the matching trust root, or every check fails.
 
 **Roll it out in audit mode.** Turning on strict admission verification without first measuring what would fail is a self-inflicted outage - base images, third-party charts, and vendor images are the usual casualties. Audit, publish the list, fix or exempt with expiry, then enforce.
 
@@ -48,6 +52,7 @@ tags:
 # Build: provenance and SBOM produced and attached, signed with the CI identity.
 # No signing key exists.
 - name: Build and publish with attestations
+  id: build
   run: |
     IMAGE=ghcr.io/example/checkout
     docker build -t "$IMAGE:$GITHUB_SHA" .
@@ -55,18 +60,21 @@ tags:
     echo "digest=$DIGEST" >> "$GITHUB_OUTPUT"
 
 - name: SBOM, attached to the image and signed
+  env: { DIGEST: "${{ steps.build.outputs.digest }}" }
   run: |
     syft "ghcr.io/example/checkout@${DIGEST}" -o cyclonedx-json > sbom.json
     cosign attest --yes --predicate sbom.json \
       --type cyclonedx "ghcr.io/example/checkout@${DIGEST}"
 
 - name: Keyless signature - identity is the CI workload, recorded in a log
+  env: { DIGEST: "${{ steps.build.outputs.digest }}" }
   run: cosign sign --yes "ghcr.io/example/checkout@${DIGEST}"
 
-- uses: actions/attest-build-provenance@v3 # SLSA provenance
+- uses: actions/attest@v4 # SLSA v1 build provenance
   with:
     subject-name: ghcr.io/example/checkout
     subject-digest: ${{ steps.build.outputs.digest }}
+    push-to-registry: true # store it next to the image, where admission can find it
 ```
 
 ```yaml
@@ -76,7 +84,6 @@ apiVersion: kyverno.io/v1
 kind: ClusterPolicy
 metadata: { name: verify-image-provenance }
 spec:
-  validationFailureAction: Enforce # Audit first, for weeks, before this
   webhookTimeoutSeconds: 10
   rules:
     - name: signed-by-our-ci
@@ -84,6 +91,7 @@ spec:
         any: [{ resources: { kinds: [Pod], namespaces: ["team-*"] } }]
       verifyImages:
         - imageReferences: ["ghcr.io/example/*"]
+          failureAction: Enforce # Audit first, for weeks, before this
           attestors:
             - entries:
                 - keyless:
@@ -106,6 +114,7 @@ spec:
       match:
         any: [{ resources: { kinds: [Pod], namespaces: ["team-*"] } }]
       validate:
+        failureAction: Enforce
         message: "production images must be referenced by digest"
         pattern:
           spec:

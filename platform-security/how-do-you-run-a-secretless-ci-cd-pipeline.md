@@ -1,6 +1,6 @@
 ---
 title: "How do you run a secretless CI/CD pipeline?"
-id: 67
+id: 128
 category: "Platform Security"
 difficulty: "Advanced"
 tags:
@@ -53,7 +53,7 @@ permissions:
   contents: read
   id-token: write # mint the OIDC token
   packages: write # registry via the same token
-  attestations: write # keyless signing with the CI identity
+  attestations: write # provenance via actions/attest, same CI identity
 
 jobs:
   build-and-publish:
@@ -62,10 +62,10 @@ jobs:
     # tags may deploy to it. The credential is unobtainable before approval.
     environment: production
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
 
       # Cloud credentials by federation - no stored key
-      - uses: aws-actions/configure-aws-credentials@v5
+      - uses: aws-actions/configure-aws-credentials@v6
         with:
           role-to-assume: arn:aws:iam::<account-id>:role/ci-publish
           aws-region: eu-west-1
@@ -76,9 +76,12 @@ jobs:
           IMAGE="ghcr.io/example/checkout"
           docker build -t "$IMAGE:${GITHUB_REF_NAME}" .
           docker push "$IMAGE:${GITHUB_REF_NAME}"
+          DIGEST=$(docker buildx imagetools inspect "$IMAGE:${GITHUB_REF_NAME}" --format '{{json .Manifest.Digest}}' | tr -d '"')
+          echo "digest=$DIGEST" >> "$GITHUB_OUTPUT"
 
       # Keyless signing - the signing identity IS the CI identity. No key exists.
-      - run: cosign sign --yes "ghcr.io/example/checkout:${GITHUB_REF_NAME}"
+      # Sign the digest, never the tag: a tag can be repointed after signing.
+      - run: cosign sign --yes "ghcr.io/example/checkout@${{ steps.build.outputs.digest }}"
 
       # CI's job ends here. It does NOT hold cluster credentials: it opens a
       # change and an in-cluster agent reconciles it.
