@@ -1,6 +1,6 @@
 ---
 title: "How do workload identities work on AKS?"
-id: 89
+id: 165
 category: "Azure Platform Engineering"
 difficulty: "Intermediate"
 tags:
@@ -11,7 +11,7 @@ tags:
 
 # How do workload identities work on AKS?
 
-**Short answer:** The cluster exposes an OIDC issuer, a Kubernetes service account is annotated with a client ID, and a federated identity credential on a managed identity or app registration trusts that specific issuer, subject, and audience. The Pod receives a projected token and exchanges it for an Entra ID token - no secret is stored. This replaced the older pod-managed identity approach, which intercepted the instance metadata endpoint and is deprecated.
+**Short answer:** The cluster exposes an OIDC issuer, a Kubernetes service account is annotated with a client ID, and a federated identity credential on a managed identity or app registration trusts that specific issuer, subject, and audience. The Pod receives a projected token and exchanges it for an Entra ID token - no secret is stored. This is Microsoft Entra Workload ID, and it replaced the older pod-managed identity approach, which intercepted the instance metadata endpoint and is now retired.
 
 ## Detail
 
@@ -25,7 +25,7 @@ tags:
 
 **Role assignments are where least privilege lives.** The identity itself grants nothing; Azure RBAC role assignments scoped to a resource group, a specific resource, or with a condition are what determine reach. Scope to the narrowest resource that works, and prefer a resource-scoped assignment over a subscription-scoped one - a `Contributor` assignment at subscription scope is the Azure equivalent of a wildcard policy.
 
-**Know what this replaces.** AAD Pod Identity worked by intercepting requests to the instance metadata endpoint, which required a privileged component and had race conditions at Pod startup. It is deprecated in favour of workload identity, and being able to say why - no metadata interception, no privileged daemon, standard OIDC federation - is a useful signal that you are current.
+**Know what this replaces.** AAD Pod Identity (later renamed Microsoft Entra pod-managed identity) worked by intercepting requests to the instance metadata endpoint, which required a privileged component and had race conditions at Pod startup. The open-source project was deprecated in 2022 and archived in 2023, and the AKS managed add-on was only supported until September 2025, so any cluster still using it is running an unsupported component. Being able to say why workload identity replaced it - no metadata interception, no privileged daemon, standard OIDC federation - is a useful signal that you are current. AKS Automatic clusters have the OIDC issuer and workload identity turned on from the start, which tells you it is now the baseline rather than an option.
 
 **Extend the same identity to other Azure services.** Key Vault access via the CSI driver using the workload identity, Azure SQL and PostgreSQL with Entra authentication instead of passwords, and Service Bus and Storage with RBAC rather than connection strings. The goal is that the workload's identity, not a stored secret, is what grants everything.
 
@@ -126,7 +126,7 @@ Diagnosing the usual failures, in the order they occur:
 - The Pod label being the most common silent failure is the detail that reads as hands-on. Interviewers who have debugged this will recognise it immediately.
 - Prefer user-assigned managed identities because they survive cluster replacement. Tie that to the cluster-replacement model rather than in-place upgrades.
 - Least privilege lives in the role assignment, not the identity, and a subscription-scoped `Contributor` is the Azure equivalent of a wildcard policy.
-- Knowing that AAD Pod Identity is deprecated, and why - metadata interception, a privileged daemon, startup race conditions - signals you are current.
+- Knowing that AAD Pod Identity is retired (the AKS add-on's support ended in September 2025), and why - metadata interception, a privileged daemon, startup race conditions - signals you are current.
 - Extending the same identity to Key Vault, Entra database authentication, and Service Bus RBAC shows you think of it as an identity strategy rather than one integration.
 - The platform generating all four coupled pieces is the closing point: hand-assembly across many teams guarantees confusing failures.
 

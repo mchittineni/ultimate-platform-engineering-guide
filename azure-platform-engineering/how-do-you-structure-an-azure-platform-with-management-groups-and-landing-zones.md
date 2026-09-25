@@ -1,6 +1,6 @@
 ---
 title: "How do you structure an Azure platform with management groups and landing zones?"
-id: 87
+id: 168
 category: "Azure Platform Engineering"
 difficulty: "Advanced"
 tags:
@@ -48,7 +48,7 @@ The Corp and Online split is the useful one to name: the difference between them
 
 **Naming and tagging matter more on Azure than people expect,** because several resource types require globally unique names and because RBAC and cost reporting both lean on the convention. Decide the scheme once, enforce it with policy, and apply it at provisioning.
 
-**Consider the managed landing zone accelerator.** Microsoft publishes a reference implementation of this pattern, and adopting it is often faster and safer than building the equivalent. The trade is opinionated structure; the honest position is to use it unless you have a specific requirement it blocks.
+**Consider the landing zone accelerator.** Microsoft publishes a reference implementation of this pattern, and adopting it is often faster and safer than building the equivalent. The trade is opinionated structure; the honest position is to use it unless you have a specific requirement it blocks. Know which implementation is current: the Azure Landing Zones IaC accelerator now deploys the platform landing zone from Azure Verified Modules for both Bicep and Terraform, with every part (the management group hierarchy included) customisable. The older ALZ-Bicep "classic" modules have been removed from the accelerator and are heading for archive, so a new build should start from the AVM-based path. The policy set it assigns is also moving to built-in definitions, so an estate that copied the custom ALZ policies years ago should plan that migration.
 
 ## Example
 
@@ -131,7 +131,7 @@ resource requireDiagnostics 'Microsoft.Authorization/policyAssignments@2024-04-0
 - The Corp versus Online landing zone split is a strong concrete example, because the policy difference - whether public exposure is permitted - genuinely justifies a boundary.
 - Platform subscriptions separated from landing zones, with stricter change control on connectivity and management, is the landing zone pattern's real value.
 - Mention assigning policy at the management group rather than per subscription; per-subscription assignment is how hierarchies silently drift.
-- Take a position on the landing zone accelerator: adopt it unless a specific requirement blocks it, and know what that requirement would be.
+- Take a position on the landing zone accelerator: adopt it unless a specific requirement blocks it, and know what that requirement would be. Saying that it is now built on Azure Verified Modules, and that ALZ-Bicep classic is being retired, shows you are current.
 
 ---
 

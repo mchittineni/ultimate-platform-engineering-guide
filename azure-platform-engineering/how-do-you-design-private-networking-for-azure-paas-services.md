@@ -1,6 +1,6 @@
 ---
 title: "How do you design private networking for Azure PaaS services?"
-id: 92
+id: 170
 category: "Azure Platform Engineering"
 difficulty: "Advanced"
 tags:
@@ -27,9 +27,9 @@ tags:
 
 **Subnet planning needs doing up front.** Private endpoints consume addresses in the subnet they occupy, some services require a dedicated delegated subnet, and address space is painful to change later. Allocate a private endpoint subnet per spoke as part of vending, sized for growth.
 
-**Route egress through inspection deliberately.** In a Corp landing zone, outbound traffic typically routes to Azure Firewall in the hub via a route table, giving one place for egress policy and logging. That is also where a stable outbound address for third-party allowlisting comes from. Note that this makes the firewall a data-plane dependency, so it needs corresponding availability.
+**Route egress through inspection deliberately.** In a Corp landing zone, outbound traffic typically routes to Azure Firewall in the hub via a route table, giving one place for egress policy and logging. That is also where a stable outbound address for third-party allowlisting comes from. Note that this makes the firewall a data-plane dependency, so it needs corresponding availability. Explicit egress is also no longer optional: Azure is retiring default outbound access, and virtual networks created with the newer network API versions (from `2025-07-01`, and in the portal since April 2026) get private subnets by default, so a VM or node without a NAT gateway, firewall route, or load balancer outbound rule simply has no internet path. Build the egress route into the vended spoke rather than relying on the old implicit behaviour.
 
-**On-premises resolution needs the DNS path completed too.** Private endpoints are reachable from on-premises over ExpressRoute or VPN, but only if on-premises DNS forwards the relevant zones to a resolver inside Azure. Forgetting this is the second most common failure after the missing zone group.
+**On-premises resolution needs the DNS path completed too.** Private endpoints are reachable from on-premises over ExpressRoute or VPN, but only if on-premises DNS forwards the relevant zones to a resolver inside Azure - today normally the inbound endpoint of an Azure DNS Private Resolver in the hub, rather than a pair of forwarder VMs you patch yourself. Forgetting this is the second most common failure after the missing zone group.
 
 **Have an answer for services with awkward integration.** Not every Azure service supports private endpoints for every sub-resource, and some platform features behave differently when public access is disabled. Check the specific service's current support before committing a design, and record the exceptions with compensating controls rather than discovering them during implementation.
 

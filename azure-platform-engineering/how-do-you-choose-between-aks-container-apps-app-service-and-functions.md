@@ -1,6 +1,6 @@
 ---
 title: "How do you choose between AKS, Container Apps, App Service, and Functions?"
-id: 90
+id: 166
 category: "Azure Platform Engineering"
 difficulty: "Intermediate"
 tags:
@@ -26,11 +26,11 @@ tags:
 | App Service    | Almost nothing               | Conventional web apps, deployment slots           | Platform constraints; less container flexibility |
 | Functions      | Nothing                      | Event-driven, short executions, bindings          | Execution limits, cold starts on consumption     |
 
-**AKS is right when the ecosystem is the point.** If your platform is built on custom resources, admission control, Crossplane, a service mesh, or GitOps reconciliation of arbitrary resources, you need real Kubernetes - none of that exists in Container Apps. That is a legitimate and common reason for a platform team specifically, because the platform's own machinery often needs it even when the workloads would not.
+**AKS is right when the ecosystem is the point.** If your platform is built on custom resources, admission control, Crossplane, a service mesh, or GitOps reconciliation of arbitrary resources, you need real Kubernetes - none of that exists in Container Apps. That is a legitimate and common reason for a platform team specifically, because the platform's own machinery often needs it even when the workloads would not. AKS Automatic has narrowed the operating gap: node provisioning, upgrades, networking, and baseline policy come preconfigured, so "we need Kubernetes but not a cluster to hand-tune" is now a realistic middle option rather than a contradiction.
 
 **App Service still wins for a specific shape.** A conventional web application, particularly on a Windows or .NET stack, benefits from deployment slots with swap, easy custom domains and certificates, and a very mature runtime. Deployment slots in particular are a genuinely good blue-green mechanism with less assembly than the equivalent elsewhere.
 
-**Functions is a workload-shape decision.** Bindings to Azure services remove a lot of glue code, and the consumption model suits spiky or infrequent work. It fits badly for long-running processing, latency-sensitive paths where cold starts matter, and sustained high throughput where a continuously running container is cheaper. Calculate the crossover rather than assuming.
+**Functions is a workload-shape decision.** Bindings to Azure services remove a lot of glue code, and the consumption model suits spiky or infrequent work. It fits badly for long-running processing, latency-sensitive paths where cold starts matter, and sustained high throughput where a continuously running container is cheaper. Calculate the crossover rather than assuming. For new serverless function apps, the Flex Consumption plan is the default choice: it adds VNet integration, selectable instance memory, and always-ready instances to reduce cold starts, and the Linux Consumption plan it replaces retires on 30 September 2028.
 
 **Scale to zero is the differentiator worth naming.** Container Apps and consumption Functions can go to zero; App Service and AKS node pools generally cannot in the same way. For preview environments, internal tools, and infrequently used services this is a large cost difference, and it is often the deciding factor for non-production.
 
@@ -54,8 +54,9 @@ Choosing, in the order that eliminates options fastest:
     no  -> continue
 
   Is it event-driven with short executions, and would bindings remove real glue?
-    yes -> Functions. Calculate the crossover: sustained high volume usually
-           favours a container running continuously.
+    yes -> Functions on the Flex Consumption plan. Calculate the crossover:
+           sustained high volume usually favours a container running
+           continuously.
     no  -> continue
 
   Is it a conventional web app, especially .NET, that would benefit from
@@ -97,9 +98,12 @@ properties:
           custom:
             type: azure-servicebus
             metadata: { queueName: orders, messageCount: "20" }
-            identity: system # no connection string
+            # no connection string: the scaler authenticates as the app's identity
+            identity: /subscriptions/<sub-id>/resourceGroups/rg-team-payments/providers/Microsoft.ManagedIdentity/userAssignedIdentities/id-checkout
   identity:
     type: UserAssigned # per-app identity, same model as AKS workload identity
+    userAssignedIdentities:
+      /subscriptions/<sub-id>/resourceGroups/rg-team-payments/providers/Microsoft.ManagedIdentity/userAssignedIdentities/id-checkout: {}
 ```
 
 ```text

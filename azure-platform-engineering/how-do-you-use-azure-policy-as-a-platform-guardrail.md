@@ -1,6 +1,6 @@
 ---
 title: "How do you use Azure Policy as a platform guardrail?"
-id: 88
+id: 164
 category: "Azure Platform Engineering"
 difficulty: "Intermediate"
 tags:
@@ -19,14 +19,15 @@ tags:
 
 **The effects, and choosing between them is the real skill:**
 
-| Effect                    | Behaviour                                  | Use for                                   |
-| ------------------------- | ------------------------------------------ | ----------------------------------------- |
-| `Deny`                    | Rejects the request                        | States that must never exist              |
-| `Audit`                   | Records non-compliance, allows it          | Measuring before enforcing                |
-| `Modify`                  | Adds or changes properties, including tags | Applying a convention without blocking    |
-| `DeployIfNotExists`       | Deploys a missing related resource         | Diagnostic settings, backup configuration |
-| `AuditIfNotExists`        | Flags a missing related resource           | Measuring the above before deploying      |
-| `Deny` + remediation task | Fix existing resources in bulk             | Backfilling after a policy lands          |
+| Effect              | Behaviour                                                  | Use for                                   |
+| ------------------- | ---------------------------------------------------------- | ----------------------------------------- |
+| `Deny`              | Rejects the request                                        | States that must never exist              |
+| `Audit`             | Records non-compliance, allows it                          | Measuring before enforcing                |
+| `Modify`            | Adds or changes properties, including tags                 | Applying a convention without blocking    |
+| `DeployIfNotExists` | Deploys a missing related resource                         | Diagnostic settings, backup configuration |
+| `AuditIfNotExists`  | Flags a missing related resource                           | Measuring the above before deploying      |
+| `DenyAction`        | Blocks a specific action (delete)                          | Protecting critical resources from delete |
+| Remediation task    | Applies `Modify`/`DeployIfNotExists` to existing resources | Backfilling after a policy lands          |
 
 **`DeployIfNotExists` is the effect that makes Azure Policy distinctive.** Rather than rejecting a resource without diagnostic settings, it deploys the diagnostic settings. Telemetry, backup configuration, and endpoint protection become properties of existing rather than things a team must remember - which is exactly the guardrail-over-gate principle. It requires a managed identity with permission to deploy, which is worth mentioning because forgetting it is the usual reason a policy appears to do nothing.
 
@@ -40,7 +41,7 @@ tags:
 
 **The non-compliance message is part of the policy.** A denial that says only "disallowed by policy" generates a support ticket. One that names the requirement and the supported alternative resolves itself. This is the cheapest possible improvement to how policy is received.
 
-**Know the limitations.** Evaluation of existing resources is periodic rather than instant, so compliance state lags. Policy operates on the Resource Manager representation, so it cannot see inside a workload - what happens within an AKS cluster needs Kubernetes-side admission control, and the Azure Policy add-on for AKS exists to bridge that gap by translating policy into in-cluster enforcement.
+**Know the limitations.** Evaluation of existing resources is periodic rather than instant, so compliance state lags. Policy operates on the Resource Manager representation, so it cannot see inside a workload - what happens within an AKS cluster needs Kubernetes-side admission control, and the Azure Policy add-on for AKS exists to bridge that gap by translating policy into in-cluster enforcement through Gatekeeper. AKS deployment safeguards build on the same add-on to apply a curated set of Kubernetes best-practice policies, and they are switched on in enforce mode by default in AKS Automatic.
 
 ## Example
 
@@ -132,7 +133,7 @@ Rollout, and the exemption that keeps the control intact:
     "policyAssignmentId": "/providers/Microsoft.Management/managementGroups/corp/providers/Microsoft.Authorization/policyAssignments/deny-public-ip-corp",
     "exemptionCategory": "Mitigated",
     "displayName": "legacy-ftp-gateway: vendor requires a public endpoint",
-    "expiresOn": "2026-12-31T00:00:00Z",
+    "expiresOn": "2027-03-31T00:00:00Z",
     "metadata": {
       "compensatingControl": "NSG restricts source to two vendor CIDRs; DDoS Standard enabled; reviewed monthly",
       "owner": "carol@example.com",
