@@ -1,6 +1,6 @@
 ---
 title: "How do you manage EKS node capacity with Karpenter?"
-id: 84
+id: 157
 category: "AWS Platform Engineering"
 difficulty: "Advanced"
 tags:
@@ -37,6 +37,8 @@ tags:
 **Spot works well here, with the usual conditions.** Karpenter can prefer spot and fall back to on-demand, and handles interruption notices by draining ahead of reclamation. It still needs disruption budgets, diversity across types and zones, and workloads that tolerate restarts. Express it in the platform interface as an `interruptible` property rather than making each team learn the mechanics.
 
 **Separate node pools by purpose, not by team.** A small on-demand pool for platform components that must never be preempted or consolidated aggressively, a general pool, a spot pool for interruptible work, and a GPU pool. Teams get isolation from quotas and priority classes, not from their own node pool.
+
+**Know the API generation you are reading.** Karpenter 1.x is GA and uses `karpenter.sh/v1` `NodePool` and `karpenter.k8s.aws/v1` `EC2NodeClass`; the older `Provisioner` and `AWSNodeTemplate` objects, and the `v1beta1` APIs that replaced them, are gone. Many blog posts and charts still show them, and they will not apply to a current cluster. Also know the managed alternative: **EKS Auto Mode** runs Karpenter for you with the same `NodePool` API but an AWS-owned `NodeClass` and node image, so if running Karpenter itself is the toil, that is the option to weigh - see [EKS Auto Mode](./what-is-eks-auto-mode-and-when-would-a-platform-use-it.md).
 
 **Watch for the failure modes.** Pods requesting more than any allowed instance provides stay pending forever - alert on pending duration. Unsatisfiable disruption budgets block consolidation and node expiry, so nodes silently stop being replaced and drift out of patch currency. And workloads with long termination grace periods can hold up drains longer than expected.
 
@@ -156,6 +158,7 @@ The failure modes to alert on - all of them are quiet:
 - "Allow a wide instance set and constrain by requirement" is the configuration advice that matters, and it is also what makes spot capacity resilient.
 - The unsatisfiable pod disruption budget blocking both consolidation and expiry is the best failure mode to raise: it turns a capacity setting into a silent security finding, because the node stops being patched.
 - Treating `do-not-disrupt` annotations as exceptions with expiries shows you have watched incident-time annotations accumulate.
+- If asked about versions, say Karpenter 1.x with `karpenter.sh/v1` NodePools, and that Auto Mode is the AWS-operated variant of the same model.
 - Node pools by purpose rather than by team connects back to the tenancy model - teams get isolation from quotas and priority, not their own nodes.
 
 ---

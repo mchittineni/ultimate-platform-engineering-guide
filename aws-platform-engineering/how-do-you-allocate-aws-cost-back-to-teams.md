@@ -1,6 +1,6 @@
 ---
 title: "How do you allocate AWS cost back to teams?"
-id: 86
+id: 153
 category: "AWS Platform Engineering"
 difficulty: "Intermediate"
 tags:
@@ -25,9 +25,11 @@ tags:
 
 **Split charge rules handle shared cost, and this is where judgement is required.** Shared platform infrastructure - the management cluster, the observability pipeline, transit gateway, central egress - is real spend that belongs to no single team. Split it proportionally by usage where a usage metric exists, evenly where none does, or leave it as a platform cost centre. Any of these is defensible; what is not defensible is leaving a large unallocated bucket that makes every team's number wrong.
 
-**Kubernetes cost needs its own layer.** A shared cluster appears in billing as EC2 or Fargate spend, not as per-namespace cost. Attributing it requires usage data from the cluster - OpenCost or a commercial equivalent - allocating node cost across namespaces by resource requests or usage, plus a share of the cluster's idle capacity and control plane. Node cost divided by requests is the standard approach and it must be explicit about how idle capacity is handled, or teams will dispute the numbers.
+**Kubernetes cost needs its own layer.** A shared cluster appears in billing as EC2 or Fargate spend, not as per-namespace cost. Attributing it requires usage data from the cluster - AWS's split cost allocation data for EKS, which writes per-Pod cost into the Cost and Usage Report, or OpenCost or a commercial equivalent - allocating node cost across namespaces by resource requests or usage, plus a share of the cluster's idle capacity and control plane. Node cost divided by requests is the standard approach and it must be explicit about how idle capacity is handled, or teams will dispute the numbers.
 
 **Know the costs that are structurally hard to attribute.** Data transfer between availability zones, NAT gateway processing, load balancer capacity units, and support charges frequently cannot be traced to a workload from billing data alone. Name them, choose a split rule, and document it - a documented approximation is trusted, an unexplained line item is not.
+
+**Export in a standard shape.** AWS Data Exports can produce billing data in the FinOps Foundation's FOCUS format, so the same allocation pipeline and dashboards can take AWS, other clouds, and SaaS spend without a bespoke schema per source.
 
 **Publish the unallocated percentage.** It is the credibility metric for the whole exercise. If 30% of spend is unattributed, no team's figure means much, and the target is to drive it down rather than to hide it.
 
@@ -80,9 +82,10 @@ Allocation layers, from most to least reliable.
     {
       "Source": "platform-shared",
       "Targets": ["team-payments", "team-search", "team-data", "team-web"],
-      // PROPORTIONAL where a usage metric exists; EVEN where none does.
-      // Either is defensible; an unallocated bucket is not.
-      "Method": "PROPORTIONAL",
+      // FIXED percentages, set from a usage metric (here, share of TGW and
+      // egress bytes). PROPORTIONAL splits by each target's own spend instead,
+      // and EVEN splits equally. Any is defensible; an unallocated bucket is not.
+      "Method": "FIXED",
       "Parameters": [{ "Type": "ALLOCATION_PERCENTAGES", "Values": ["41", "22", "24", "13"] }]
     }
   ]

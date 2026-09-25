@@ -1,6 +1,6 @@
 ---
 title: "How do you build a paved road for AWS infrastructure self-service?"
-id: 85
+id: 158
 category: "AWS Platform Engineering"
 difficulty: "Advanced"
 tags:
@@ -23,7 +23,9 @@ tags:
 
 **Enforce a naming convention at provisioning, because it is what makes IAM scoping possible.** If every resource a tenant owns matches `example-<tenant>-<workload>-*`, then IAM policies can be bounded by prefix and tag condition rather than granting broad access. The convention is not tidiness - it is the mechanism that makes least privilege achievable.
 
-**Two credible implementations, and the choice follows from your control plane.** Crossplane compositions if your platform is Kubernetes-based, so claims are Kubernetes objects with RBAC, admission control, and audit already applied. Versioned Terraform modules consumed through automation if you want the reviewable plan and already run that path well. Either way, teams get no direct AWS credentials - the controller or the pipeline holds them.
+**Two credible implementations, and the choice follows from your control plane.** Crossplane compositions if your platform is Kubernetes-based, so claims are Kubernetes objects with RBAC, admission control, and audit already applied. Versioned Terraform modules consumed through automation if you want the reviewable plan and already run that path well. Either way, teams get no direct AWS credentials - the controller or the pipeline holds them. On AWS there is now a third option for Kubernetes-based platforms: EKS Capabilities (November 2025) runs Argo CD, AWS Controllers for Kubernetes (ACK), and kro as managed services, so a kro `ResourceGraphDefinition` composing ACK resources gives a similar claim-and-expand model without operating the controllers yourself.
+
+**If you use Crossplane, design for v2.** Crossplane v2 (2025) makes composite resources namespaced, so the separate claim object is no longer needed - a team creates the namespaced composite directly - and providers ship namespaced managed resources (API groups such as `rds.aws.m.upbound.io`). The example below uses the v1-style claim and cluster-scoped managed resources, which v2 still supports for existing platforms; a new build would declare the XRD with `apiextensions.crossplane.io/v2` and `scope: Namespaced` and compose namespaced resources instead.
 
 **Return the connection details as a secret, not as documentation.** The workload should reference a secret the platform wrote; the credential should never be seen by a human or pasted anywhere. This is also what makes rotation possible later.
 
@@ -70,7 +72,7 @@ spec:
               spec:
                 forProvider:
                   engine: postgres
-                  engineVersion: "16.3" # platform-pinned, upgraded centrally
+                  engineVersion: "17.11" # platform-pinned, upgraded centrally
                   # --- mandatory, no claim field exposes these ---
                   storageEncrypted: true
                   publiclyAccessible: false

@@ -1,6 +1,6 @@
 ---
 title: "How do you give pods on EKS access to AWS resources safely?"
-id: 82
+id: 151
 category: "AWS Platform Engineering"
 difficulty: "Intermediate"
 tags:
@@ -21,15 +21,17 @@ tags:
 
 **EKS Pod Identity: the newer, simpler mechanism.** An association is created on the cluster mapping a namespace and service account to a role, and an agent supplies credentials. The differences that matter in practice:
 
-| Aspect                   | IRSA                                 | Pod Identity                          |
-| ------------------------ | ------------------------------------ | ------------------------------------- |
-| Where the binding lives  | Role trust policy + SA annotation    | An association on the cluster         |
-| Risk of a wildcard trust | Real - it is hand-written per role   | Much lower - no per-role trust policy |
-| Cross-account            | Requires role chaining               | Supported more directly               |
-| Reusing one role         | Trust policy grows with each cluster | Associations added, trust unchanged   |
-| Cluster OIDC provider    | Required                             | Not required                          |
+| Aspect                   | IRSA                                 | Pod Identity                            |
+| ------------------------ | ------------------------------------ | --------------------------------------- |
+| Where the binding lives  | Role trust policy + SA annotation    | An association on the cluster           |
+| Risk of a wildcard trust | Real - it is hand-written per role   | Much lower - no per-role trust policy   |
+| Cross-account            | Requires role chaining               | Native: association names a target role |
+| Reusing one role         | Trust policy grows with each cluster | Associations added, trust unchanged     |
+| Cluster OIDC provider    | Required                             | Not required                            |
 
-For new clusters Pod Identity is generally the better default because it removes the class of mistake that hand-written trust policies invite. IRSA remains widely deployed and is not going away, so know both.
+Two newer Pod Identity features strengthen the case. Since mid-2025 an association can name a **target role** in another account, and EKS performs the role chaining for you, so cross-account access no longer needs code or per-account OIDC providers. And Pod Identity attaches session tags - cluster name, namespace, service account - to the credentials, so one policy can use conditions such as `aws:PrincipalTag/kubernetes-namespace` for attribute-based access instead of a role per namespace. EKS Auto Mode clusters include the Pod Identity agent, so there is nothing to install.
+
+For new clusters Pod Identity is the better default because it removes the class of mistake that hand-written trust policies invite. IRSA remains supported and widely deployed - and is still the mechanism for clusters outside EKS proper that expose their own OIDC issuer - so know both.
 
 **One role per workload.** Not per team, not per namespace. Shared roles collapse your authorisation model and make an incident's blast radius unknowable. The platform should generate the role, its policy, the service account, and the binding from the service declaration - because at forty teams, hand-written trust policies guarantee some will be wrong.
 
@@ -70,6 +72,15 @@ aws eks create-pod-identity-association \
   --namespace team-payments \
   --service-account checkout \
   --role-arn arn:aws:iam::<account-id>:role/team-payments-checkout
+
+# Cross-account: EKS assumes the local role, then chains to the target role
+# in the data account. No SDK changes and no OIDC provider in that account.
+aws eks create-pod-identity-association \
+  --cluster-name prod-eu-1 \
+  --namespace team-payments \
+  --service-account ledger-reader \
+  --role-arn arn:aws:iam::<account-id>:role/team-payments-ledger-reader \
+  --target-role-arn arn:aws:iam::<data-account-id>:role/ledger-read-from-prod-eu-1
 ```
 
 ```json
@@ -128,7 +139,7 @@ all the per-pod work above.
 - Check the node instance role first and say why: an over-broad node role means every Pod on that node inherits it, which undoes all per-Pod identity work. Most candidates skip straight to IRSA.
 - Blocking Pod access to the instance metadata endpoint - IMDSv2 with hop limit 1, or a network policy - is the defence-in-depth detail that shows real hardening experience.
 - The wildcard trust-policy subject is the specific serious misconfiguration to name, along with the `aud` condition that most people forget.
-- Know both IRSA and Pod Identity, and take a position: Pod Identity for new clusters because it removes the hand-written trust policy that invites the mistake.
+- Know both IRSA and Pod Identity, and take a position: Pod Identity for new clusters because it removes the hand-written trust policy that invites the mistake. Mentioning its native cross-account target roles and session tags shows your knowledge is current.
 - One role per workload, generated by the platform. At scale, hand-written trust policies guarantee some are wrong.
 - Resource-scoped policies via an enforced naming prefix or tag condition, not action-scoped policies on `*`.
 - Note that audit findings are usually debugging drift rather than bad design - it is the realistic failure mode and explains why the audit must be scheduled.

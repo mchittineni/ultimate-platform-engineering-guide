@@ -1,6 +1,6 @@
 ---
 title: "How do you choose between ECS, EKS, Lambda, and App Runner for a platform runtime?"
-id: 83
+id: 152
 category: "AWS Platform Engineering"
 difficulty: "Intermediate"
 tags:
@@ -11,7 +11,7 @@ tags:
 
 # How do you choose between ECS, EKS, Lambda, and App Runner for a platform runtime?
 
-**Short answer:** Choose by the operational burden you are willing to own and the workload shape, not by capability. Lambda for event-driven and spiky work with short executions; App Runner for straightforward HTTP services where you want almost no operational surface; ECS on Fargate when you want containers without a control plane to run; EKS when you need the Kubernetes ecosystem, custom controllers, or portability. A platform should support one primary runtime plus one specialised, not all four.
+**Short answer:** Choose by the operational burden you are willing to own and the workload shape, not by capability. Lambda for event-driven and spiky work with short executions; ECS Express Mode for straightforward HTTP services where you want almost no operational surface (App Runner used to fill this slot, but it closed to new customers on 30 April 2026); ECS on Fargate when you want containers without a control plane to run; EKS when you need the Kubernetes ecosystem, custom controllers, or portability. A platform should support one primary runtime plus one specialised, not all four.
 
 ## Detail
 
@@ -22,7 +22,7 @@ tags:
 | Runtime     | You operate                  | Best for                                       | Main constraint                                         |
 | ----------- | ---------------------------- | ---------------------------------------------- | ------------------------------------------------------- |
 | Lambda      | Nothing                      | Event-driven, spiky, glue, short tasks         | Execution time limit, cold starts, per-invocation model |
-| App Runner  | Nothing                      | Simple HTTP services from an image             | Least control, limited networking and features          |
+| App Runner  | Nothing                      | Existing customers only; closed to new ones    | No new features planned; migrate to ECS Express Mode    |
 | ECS/Fargate | Task definitions             | Containers, no control plane to manage         | AWS-specific; thinner ecosystem                         |
 | EKS         | A cluster and its components | Kubernetes ecosystem, controllers, portability | By far the largest operational surface                  |
 
@@ -32,7 +32,7 @@ tags:
 
 **Lambda is a workload-shape decision, not a philosophy.** It fits event handling, scheduled work, glue between services, and spiky traffic where paying per invocation beats paying for idle capacity. It fits badly for long-running processing, workloads needing large local state, latency-critical paths sensitive to cold starts, and anything where the per-invocation cost at sustained high volume exceeds a container running continuously. The crossover point is worth calculating rather than assuming.
 
-**App Runner suits a narrow, real case:** a containerised HTTP service that needs to be deployed with minimal ceremony. If a team's requirements grow beyond it - specific networking, sidecars, unusual scaling - the migration is straightforward, which makes it a reasonable starting point rather than a trap.
+**App Runner is now a legacy answer.** It suited a narrow, real case - a containerised HTTP service deployed with minimal ceremony - but AWS closed it to new customers on 30 April 2026. Existing customers can keep using it and AWS continues security and availability work, but no new features are planned. AWS points customers at **Amazon ECS Express Mode** (launched November 2025), which takes a container image and provisions a Fargate service with a load balancer, HTTPS endpoint, and autoscaling in one step, while leaving the full ECS feature set available when a team outgrows the defaults. For a platform this is a better shape anyway: the "simple" path and the "full" path are the same runtime, so graduating does not mean a migration. The broader lesson is worth saying in an interview - a thin PaaS layer on a hyperscaler can be withdrawn, which is another argument for a platform interface that keeps the runtime an implementation detail.
 
 **Mixed estates are normal; unbounded ones are not.** A defensible shape is one primary runtime carrying most services, plus Lambda for event-driven work, with anything else requiring a recorded justification. What you want to avoid is four runtimes chosen by team preference, because then the platform's paved road is four paved roads.
 
@@ -55,7 +55,8 @@ Choosing, in the order the questions actually matter:
 
   Is it an ordinary HTTP service or async worker with no unusual requirements?
     yes -> ECS on Fargate. Containers, IAM per task, no control plane to operate.
-           App Runner if you want even less surface and can accept less control.
+           ECS Express Mode if you want even less surface to start with - it is
+           the same runtime, so outgrowing it is not a migration.
     no  -> continue
 
   Do you need portability across clouds, or is your platform already Kubernetes?
@@ -82,8 +83,9 @@ A defensible estate for 220 services:
     Each has a recorded justification.
 
   App Runner .................................... 0
-    evaluated; the platform already provides an easier path than App Runner for
-    an HTTP service, so it adds surface without adding value here.
+    closed to new customers since April 2026; the two services a team had
+    started on it were moved to ECS Express Mode, then onto the platform's
+    own Service path.
 
   Note what this is NOT: four runtimes chosen by team preference. One primary,
   one shape-based fit, and four recorded exceptions.
@@ -114,6 +116,7 @@ spec:
 - Open with the platform-team framing: each supported runtime is a permanent commitment to a golden path, observability wiring, IAM patterns, and an upgrade story. That is what makes this a platform question rather than a service question.
 - Be able to say EKS is not automatically right, and give the specific condition that makes it right - you need the Kubernetes ecosystem for your own platform machinery.
 - Recommending ECS on Fargate where Kubernetes is not needed is the judgement signal here. Many candidates default to Kubernetes without examining the operational cost.
+- Know that App Runner closed to new customers in April 2026 and that ECS Express Mode is AWS's suggested replacement. Recommending App Runner for a new platform today is a currency red flag.
 - For Lambda, frame it as a workload-shape fit and mention calculating the crossover point rather than assuming serverless is cheaper.
 - "One primary plus one specialised, with recorded exceptions" is the defensible answer to the mixed-estate question.
 - The strongest close is that the platform interface should outlast the runtime choice, so a workload can move between runtimes without its repository changing.
