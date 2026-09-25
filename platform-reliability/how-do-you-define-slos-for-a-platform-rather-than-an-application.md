@@ -1,6 +1,6 @@
 ---
 title: "How do you define SLOs for a platform rather than an application?"
-id: 104
+id: 206
 category: "Platform Reliability"
 difficulty: "Advanced"
 tags:
@@ -38,6 +38,8 @@ tags:
 **Set targets from observed behaviour and consumer need,** not from ambition. Measure the current distribution for a few weeks, then choose a target that is achievable and meaningful. And be careful with tier-1 promises: if you commit to a strong deployment target, you are committing to the on-call and engineering investment to sustain it.
 
 **Publish them, and report against them.** An unpublished SLO is a private aspiration. Publishing turns the relationship with teams into a stated expectation, gives you the basis for prioritisation arguments, and - importantly - gives you the standing to say no to work that would jeopardise a target you have committed to.
+
+**Define them as code, not in a wiki.** Keep each SLO in the capability's repository and generate the recording rules, burn-rate alerts, and dashboards from it. The vendor-neutral [OpenSLO](https://github.com/OpenSLO/OpenSLO) specification (stable at `openslo/v1`, v2 in development) and open-source generators such as Sloth and Pyrra do this for Prometheus-based stacks; the custom resource below is the same idea shaped around platform capabilities.
 
 **Include the meta-SLO.** Whether teams can see the platform's own state during an incident. If your status page and dashboards depend on the platform they describe, they will be unavailable exactly when they are needed.
 

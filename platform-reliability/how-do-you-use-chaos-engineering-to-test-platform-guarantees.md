@@ -1,6 +1,6 @@
 ---
 title: "How do you use chaos engineering to test platform guarantees?"
-id: 110
+id: 204
 category: "Platform Reliability"
 difficulty: "Intermediate"
 tags:
@@ -40,6 +40,10 @@ tags:
 **Start in non-production, but do not stay there.** Non-production is where you find the obvious failures and build confidence in the tooling. Production is where the interesting findings are, because non-production differs in scale, traffic, and configuration. Move there deliberately, with a small blast radius, during business hours, with the owning team present.
 
 **Game days are the higher-value format for a platform.** A scheduled exercise with a scenario, participants, and observers tests the response path as well as the system - whether the runbook is correct, whether dashboards are reachable, whether the on-call engineer can find the mitigation. Many of the most valuable findings are about the response, not the failure.
+
+**Use a maintained injector rather than scripts.** For Kubernetes, Chaos Mesh and LitmusChaos are both CNCF incubating projects that express faults as custom resources, which makes them easy to wrap in a platform-owned API with enforced limits; the managed cloud services, AWS Fault Injection Service and Azure Chaos Studio, add cloud-level faults such as zone or API failures with IAM-scoped stop conditions. The tool matters less than the hypothesis, steady state, and blast-radius controls around it.
+
+**Regulation increasingly expects this evidence.** For EU financial entities, the Digital Operational Resilience Act (DORA), in application since 17 January 2025, requires a risk-based digital operational resilience testing programme and, for entities designated by their supervisors, threat-led penetration testing at least every three years. A chaos programme with written hypotheses, results, and closed findings is exactly the kind of record that satisfies an auditor, whereas ad hoc experiments are not.
 
 **Record and act on findings, or it becomes theatre.** Each experiment produces either a confirmed hypothesis or a defect, and the defects need owners and dates. A programme that runs experiments and does not close findings is worse than none, because it produces false confidence.
 
