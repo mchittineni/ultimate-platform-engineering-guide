@@ -33,6 +33,8 @@ tags:
 - **CLI.** Good for scaffolding, local workflows, and one-off operations - `platform create service`, `platform env open`.
 - **Portal.** Best for discovery, ownership, catalogues, and scorecards. Weakest as the primary path for routine changes, because a form submission is not reviewable or diffable.
 
+A fourth consumer now matters as much as the other three: AI coding agents. They cannot use a portal form, so platforms increasingly expose the same capabilities through a documented API and Model Context Protocol (MCP) servers, with the same policy and audit as every other interface - another reason Git and a well-defined API should be the foundation. See [how AI coding agents change what a platform must provide](./how-do-ai-coding-agents-change-what-a-platform-must-provide.md).
+
 **What it replaces.** Ticket-driven operations, per-team snowflake pipelines, and the situation where each service's reliability depends on which engineer set it up. The business case is cycle time and consistency: compliant logging, backups, tagging, and alerting arrive by default rather than by discipline.
 
 **What it is not.** Not a Backstage instance - a portal without provisioning behind it is a catalogue. Not a wiki page listing approved tools. Not a Kubernetes cluster with namespaces handed out. Each of these is a common thing organisations call an IDP, and naming that gap is a strong interview move.

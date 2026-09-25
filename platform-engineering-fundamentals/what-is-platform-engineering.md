@@ -21,7 +21,7 @@ tags:
 
 **It is a product, not a project.** A platform has users who can choose not to use it, which means it needs the ordinary apparatus of a product: research into what its users actually struggle with, a roadmap, versioned interfaces, documentation, support, and adoption metrics. Platforms delivered as internal projects tend to ship what the platform team found interesting and get routed around.
 
-**What it is measured on.** Not components shipped. The honest measures are lead time from commit to production, the time a new service takes to reach production, the proportion of services on the supported path, and change failure rate. Those are outcomes for the platform's users, and they are the numbers an interviewer will push you toward.
+**What it is measured on.** Not components shipped. The honest measures are lead time from commit to production, the time a new service takes to reach production, the proportion of services on the supported path, and change failure rate - plus rework rate, which DORA added in 2024 to capture unplanned fixes after a release. Those are outcomes for the platform's users, and they are the numbers an interviewer will push you toward.
 
 **The trade-off.** Every abstraction you add buys convenience and costs flexibility, and you now own a piece of critical infrastructure with its own reliability, upgrade, and support burden. A platform that is not adopted is pure cost. That is why "when should you not build one" is a fair and common question.
 

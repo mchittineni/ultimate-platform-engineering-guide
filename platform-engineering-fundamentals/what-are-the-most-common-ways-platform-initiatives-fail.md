@@ -1,6 +1,6 @@
 ---
 title: "What are the most common ways platform initiatives fail?"
-id: 8
+id: 12
 category: "Platform Engineering Fundamentals"
 difficulty: "Advanced"
 tags:

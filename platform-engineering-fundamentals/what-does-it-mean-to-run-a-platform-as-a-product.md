@@ -1,6 +1,6 @@
 ---
 title: "What does it mean to run a platform as a product?"
-id: 7
+id: 11
 category: "Platform Engineering Fundamentals"
 difficulty: "Advanced"
 tags:

@@ -1,6 +1,6 @@
 ---
 title: "How do you decide whether your organisation needs a platform team?"
-id: 6
+id: 8
 category: "Platform Engineering Fundamentals"
 difficulty: "Intermediate"
 tags:
@@ -35,7 +35,7 @@ tags:
 
 **The intermediate option people forget.** Before a dedicated team, try an enabling rotation: two engineers on a fixed-term mission to build the golden path, then return to their teams. It builds the paved road, spreads knowledge, and gives you evidence about whether the permanent investment is warranted.
 
-**Buy before you build.** For many organisations the right answer is a managed platform - a PaaS, a managed Kubernetes offering with an opinionated delivery tool, or a commercial IDP - with a small team integrating it. Building your own control plane because it is more interesting is the classic misapplication.
+**Buy before you build.** For many organisations the right answer is a managed platform - a PaaS, a managed Kubernetes offering in its fully managed mode (EKS Auto Mode, AKS Automatic, GKE Autopilot) with an opinionated delivery tool, or a commercial IDP - with a small team integrating it. Building your own control plane because it is more interesting is the classic misapplication.
 
 ## Example
 

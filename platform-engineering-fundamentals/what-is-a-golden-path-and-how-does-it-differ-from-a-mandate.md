@@ -1,6 +1,6 @@
 ---
 title: "What is a golden path and how does it differ from a mandate?"
-id: 4
+id: 6
 category: "Platform Engineering Fundamentals"
 difficulty: "Intermediate"
 tags:
@@ -51,7 +51,7 @@ Leaving the path (explicit, not accidental):
   reason: "GPU inference; needs node affinity + custom scheduler"
   accepts: [own-dashboards, own-alerts, own-upgrade-cadence]
   owner: team-ml
-  review_by: 2026-06-30       # exemptions expire; they do not accumulate silently
+  review_by: 2027-03-31       # exemptions expire; they do not accumulate silently
 ```
 
 ## Interview tips
