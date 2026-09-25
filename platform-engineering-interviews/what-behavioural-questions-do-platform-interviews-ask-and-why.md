@@ -1,6 +1,6 @@
 ---
 title: "What behavioural questions do platform interviews ask, and why?"
-id: 135
+id: 257
 category: "Platform Engineering Interviews"
 difficulty: "Intermediate"
 tags:

@@ -1,6 +1,6 @@
 ---
 title: "How do you handle a troubleshooting round?"
-id: 134
+id: 256
 category: "Platform Engineering Interviews"
 difficulty: "Intermediate"
 tags:
