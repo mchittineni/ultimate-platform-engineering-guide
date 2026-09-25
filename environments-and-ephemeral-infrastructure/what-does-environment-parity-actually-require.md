@@ -1,6 +1,6 @@
 ---
 title: "What does environment parity actually require?"
-id: 63
+id: 112
 category: "Environments and Ephemeral Infrastructure"
 difficulty: "Intermediate"
 tags:
@@ -56,7 +56,7 @@ The parity matrix as a deliberate design, not an aspiration.
 DIMENSION                 production        staging          preview       MATCH?
   image digest             sha256:9f2c...   sha256:9f2c...   sha256:9f2c...  MUST
   config mechanism         CSI + env        CSI + env        CSI + env       MUST
-  database engine          Postgres 16.3    Postgres 16.3    Postgres 16.3   MUST
+  database engine          Postgres 17.6    Postgres 17.6    Postgres 17.6   MUST
   replicas                 30               3                1               no
   zones                    3                3                1  <-- see note MUST*
   TLS                      required         required         required        MUST
@@ -94,7 +94,7 @@ flags: { source: provider, environment: production } # <-- PRODUCTION values,
 # environments/values/base.yaml
 security: { tls: required, auth: sso, networkPolicy: enforced }
 topology: { minZones: 3, antiAffinity: required }
-dependencies: { postgres: "16.3", redis: "7.2" } # versions pinned identically
+dependencies: { postgres: "17.6", redis: "8.0" } # versions pinned identically
 ```
 
 ```text
@@ -109,7 +109,7 @@ flagged:
     payments live vs sandbox
 
   UNEXPECTED (2 findings)
-    ✗ postgres 16.3 vs 16.1
+    ✗ postgres 17.6 vs 17.2
         staging was not upgraded in the last maintenance window. Query planner
         differences between these versions are documented - staging performance
         results are not comparable until this is fixed.

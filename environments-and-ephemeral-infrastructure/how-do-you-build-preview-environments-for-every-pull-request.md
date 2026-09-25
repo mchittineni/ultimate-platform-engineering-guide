@@ -1,6 +1,6 @@
 ---
 title: "How do you build preview environments for every pull request?"
-id: 61
+id: 116
 category: "Environments and Ephemeral Infrastructure"
 difficulty: "Advanced"
 tags:
@@ -23,9 +23,9 @@ tags:
 
 **Never expose previews publicly.** Authentication in front of every preview URL, ideally your single sign-on. Preview environments accumulate real-looking data and are otherwise an unauthenticated copy of your application on the internet.
 
-**Restore data from a template, do not migrate from empty.** Running the full migration history plus seeding on every environment is slow and gets slower forever. Maintain a prepared snapshot, refreshed nightly, and restore it - or use a database that supports cheap copy-on-write clones. This is usually the single biggest lever on time to ready.
+**Restore data from a template, do not migrate from empty.** Running the full migration history plus seeding on every environment is slow and gets slower forever. Maintain a prepared snapshot, refreshed nightly, and restore it - or use a database that supports cheap copy-on-write clones - see [how to give each pull request its own database](./how-do-you-give-each-pull-request-its-own-database.md). This is usually the single biggest lever on time to ready.
 
-**Handle the services you are not deploying with request-level routing.** Deploy only what the pull request changes. Everything else routes to a shared baseline running the current main branch. A header carrying the preview identity is propagated through calls, and the routing layer sends a request to the preview's own version of a service if it exists and to the baseline otherwise. This is the mechanism that makes previews affordable beyond a handful of services, and its requirement - context propagation through every hop - is worth naming because it is real work.
+**Handle the services you are not deploying with request-level routing.** Deploy only what the pull request changes. Everything else routes to a shared baseline running the current main branch. A header carrying the preview identity is propagated through calls, and the routing layer sends a request to the preview's own version of a service if it exists and to the baseline otherwise. This is the mechanism that makes previews affordable beyond a handful of services, and its requirement - context propagation through every hop - is worth naming because it is real work. OpenTelemetry baggage is a convenient carrier, because services instrumented with OpenTelemetry already forward it; a sidecar or waypoint then lifts the value into the routing header. The routing rule itself is increasingly written as a Gateway API `HTTPRoute` with a header match rather than a mesh-specific resource; it is the portable form, and it is what Istio's ambient mode uses for waypoint routing.
 
 **Post the URL and the state into the pull request.** A comment with the URL, what was deployed, what came from the baseline, and the seed data version. Reviewers should not have to work out how to reach it, and knowing which services are previewed versus baseline prevents misleading conclusions.
 
@@ -95,7 +95,7 @@ Time to ready - where the minutes actually go, and what each fix bought.
   seed data                      3m20s     -           included in the template
   workloads ready                1m15s     0m50s       pre-warmed node capacity
                                 -----     -----
-  TOTAL                          19m60s    2m00s
+  TOTAL                          20m00s    2m00s
 
   Under 5 minutes: previews get used. Over 15: people merge without waiting, and
   the whole capability is wasted effort. The data stage was the biggest lever.

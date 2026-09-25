@@ -1,6 +1,6 @@
 ---
 title: "How do you give developers a fast inner development loop?"
-id: 65
+id: 114
 category: "Environments and Ephemeral Infrastructure"
 difficulty: "Intermediate"
 tags:
@@ -32,11 +32,13 @@ tags:
 
 **Running locally against remote dependencies is the other strong option**, particularly for languages with fast native tooling. The service runs on the laptop with a debugger attached, while its dependencies - databases, other services - are the real ones in a remote namespace, reached through a proxy that also routes traffic from the cluster back to the local process. Best debugging experience; requires a working proxy mechanism and reasonable network latency.
 
-**Cloud development environments solve a different problem.** A remote workspace gives consistent tooling, fast dependency access, and no laptop setup, which is excellent for onboarding and for large repositories. It does not by itself make the loop fast - a remote environment doing an image rebuild each time is still slow. Combine it with sync or local-process approaches rather than treating it as a substitute.
+**Cloud development environments solve a different problem.** A remote workspace gives consistent tooling, fast dependency access, and no laptop setup, which is excellent for onboarding and for large repositories. It does not by itself make the loop fast - a remote environment doing an image rebuild each time is still slow. Combine it with sync or local-process approaches rather than treating it as a substitute. Defining the workspace as a [dev container](./what-is-a-dev-container-and-why-do-platforms-standardise-on-them.md) keeps the same toolchain available on a laptop, in a remote workspace, and in CI.
 
 **Language tooling is part of the platform's job.** Compiled languages need build caching that actually works - and getting that right is real, unglamorous engineering. Interpreted languages need hot reload configured correctly. Test selection matters too: running only the tests affected by a change turns a two-minute suite into a five-second one.
 
 **Do not neglect the debugger.** A loop that requires adding log statements and redeploying is much slower than one where a debugger attaches to the running process. Making remote debugging work through the platform's tooling is a small piece of work with a disproportionate effect on how it feels to work in the system.
+
+**AI coding agents run the loop too.** An agent iterating on a change edits, builds, and runs tests far more often than a human, so a slow loop costs it proportionally more, and an agent without a fast, sandboxed way to run the tests produces changes nobody has exercised. A reproducible workspace definition and a documented one-command test loop serve agents and humans equally.
 
 **Instrument the loop.** Ask teams to record their cycle time, or measure it from tooling. It is the metric most likely to be terrible and least likely to appear on a platform dashboard, which is precisely why publishing it tends to get it fixed.
 
