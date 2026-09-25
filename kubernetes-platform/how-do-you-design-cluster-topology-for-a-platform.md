@@ -1,6 +1,6 @@
 ---
 title: "How do you design cluster topology for a platform?"
-id: 31
+id: 61
 category: "Kubernetes Platform"
 difficulty: "Advanced"
 tags:
@@ -76,7 +76,7 @@ Why not more:
 ```yaml
 # Cluster identity carried as labels, so the fleet definition can target by
 # property rather than by name - "every production cluster gets this policy".
-apiVersion: cluster.x-k8s.io/v1beta1
+apiVersion: cluster.x-k8s.io/v1beta2 # v1beta2 since Cluster API v1.11; v1beta1 is being retired
 kind: Cluster
 metadata:
   name: prod-eu-1

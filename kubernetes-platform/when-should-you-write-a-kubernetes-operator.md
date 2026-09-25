@@ -1,6 +1,6 @@
 ---
 title: "When should you write a Kubernetes operator?"
-id: 35
+id: 63
 category: "Kubernetes Platform"
 difficulty: "Advanced"
 tags:
@@ -30,7 +30,7 @@ tags:
 
 **The costs you are accepting.** A controller is a distributed system with the hard problems that implies: idempotency, because your reconcile function will run repeatedly on the same object; correct status conditions, or nobody can tell what is happening; finalizers for cleanup, which is where operators most often deadlock and block namespace deletion; exponential backoff; watch and cache correctness; and RBAC that is inevitably broad because you create things on users' behalf. Plus permanent maintenance across Kubernetes upgrades.
 
-**Prefer composition before code.** Crossplane compositions, or Kubernetes' own resource composition tooling, cover a large share of "turn this small spec into those resources, and keep them in step" without writing a controller. Reach for code when there is genuine logic - ordering, conditional behaviour, waiting on external state - that declarative composition cannot express.
+**Prefer composition before code.** Crossplane compositions, or kro (Kube Resource Orchestrator, a cross-vendor project that composes resources through a `ResourceGraphDefinition`), cover a large share of "turn this small spec into those resources, and keep them in step" without writing a controller. Reach for code when there is genuine logic - ordering, conditional behaviour, waiting on external state - that declarative composition cannot express. The gap has narrowed: since Crossplane v2, compositions can include any Kubernetes resource - not only cloud resources - and composite resources are namespaced without needing claims, so request 2 below is increasingly composable too; it stays an operator here because of its ordering and cross-system logic.
 
 **If you do write one, the non-negotiables.** Reconcile must be idempotent and level-triggered - act on observed state, never on the event that woke you. Report status conditions honestly, including failures. Emit events for anything a human will need to debug. Use finalizers, with an escape route documented for when they deadlock. And test against a real API server, not mocks, because the interesting bugs are in the interaction.
 

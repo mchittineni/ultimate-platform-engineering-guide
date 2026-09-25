@@ -1,6 +1,6 @@
 ---
 title: "What is admission control and how do you use it as a platform lever?"
-id: 34
+id: 59
 category: "Kubernetes Platform"
 difficulty: "Intermediate"
 tags:
@@ -30,7 +30,7 @@ tags:
 
 **Scope narrowly.** A webhook matching every resource and every operation adds latency to every API call and enlarges the blast radius enormously. Match only the resources, operations, and namespaces you need, and set a short timeout - the API server waits for you, so a slow webhook is a slow cluster.
 
-**Prefer built-in policy engines over custom webhooks.** Kyverno and Gatekeeper are mature, expose policies as declarative resources, and support audit-before-enforce and generation of resources. Kubernetes also has native Validating Admission Policy using CEL, which runs in-process - no webhook to keep available, so no fail-closed outage risk. For anything expressible in CEL, that is now the lowest-risk option and worth naming.
+**Prefer built-in policy engines over custom webhooks.** Kyverno and Gatekeeper are mature, expose policies as declarative resources, and support audit-before-enforce and generation of resources. Kubernetes also has native ValidatingAdmissionPolicy using CEL (GA since 1.30), which runs in-process - no webhook to keep available, so no fail-closed outage risk. Its mutating counterpart, MutatingAdmissionPolicy, reached GA in 1.36, so common defaulting - labels, security context, tolerations - no longer needs a webhook either. For anything expressible in CEL, native policy is now the lowest-risk option and worth naming. The engines are converging on the same model: Kyverno now offers CEL-based policy types alongside its classic `ClusterPolicy`, and Gatekeeper can generate native policies from its templates.
 
 **Always audit before enforcing.** Run a new policy in audit mode, count the violations, fix or exempt them, then switch to enforce. Turning on a policy that instantly rejects a quarter of existing workloads is a self-inflicted outage, and it is the most common way platform teams lose credibility with tenants.
 
@@ -63,6 +63,18 @@ spec:
     - expression: >
         object.spec.template.spec.containers.all(c, !c.image.endsWith(':latest'))
       message: "image tags must be immutable - :latest is not deployable"
+---
+# A policy does nothing until bound. The binding is also where audit-before-
+# enforce lives: start with [Audit], switch to [Deny] once violations are zero.
+apiVersion: admissionregistration.k8s.io/v1
+kind: ValidatingAdmissionPolicyBinding
+metadata: { name: require-owner-and-resources-tenants }
+spec:
+  policyName: require-owner-and-resources
+  validationActions: [Deny] # was [Audit] for the first three weeks
+  matchResources:
+    namespaceSelector:
+      matchLabels: { platform.example.com/tenant: "true" }
 ```
 
 ```yaml
@@ -112,7 +124,7 @@ The rollout that avoids a self-inflicted outage:
 - Place it precisely in the request path and note that mutating runs before validating. That ordering is a favourite follow-up.
 - The argument that admission control is unbypassable - unlike pipeline checks, templates, or review - is why it is the platform's strongest lever. Say it explicitly.
 - The `failurePolicy` discussion is where seniority shows. Describe the fail-closed outage scenario, then the three mitigations: high availability, excluding its own namespace, and a documented break-glass.
-- Naming native Validating Admission Policy with CEL, and why in-process evaluation removes the fail-closed risk, is current and high signal.
+- Naming native ValidatingAdmissionPolicy with CEL, and why in-process evaluation removes the fail-closed risk, is current and high signal - as is knowing that MutatingAdmissionPolicy went GA in 1.36, and that a policy needs a binding before it does anything.
 - Always volunteer audit-before-enforce with numbers. It is the difference between a policy rollout and an incident.
 
 ---
