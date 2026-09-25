@@ -1,6 +1,6 @@
 ---
 title: "What does Team Topologies say about platform teams?"
-id: 123
+id: 237
 category: "Platform Team and Operating Model"
 difficulty: "Beginner"
 tags:
@@ -43,6 +43,8 @@ The insight is that collaboration is expensive and should be time-boxed - useful
 **Platform as an enabling relationship, not a ticket queue.** A platform team providing X-as-a-Service is not doing work on request; it is providing something teams use themselves. When work arrives as tickets, the team has become a service desk and the model has broken down - and the diagnostic question is whether the team ships interfaces or performs tasks.
 
 **Conway's law, used deliberately.** The book's framing is that organisational structure and system architecture mirror each other, so you should design the team structure you want the architecture to reflect. For a platform, that means the platform's interface boundaries will end up matching the team boundaries - which is an argument for drawing the platform's API around what teams genuinely own.
+
+**What the second edition changed.** The second edition (IT Revolution, September 2025) keeps the four types and three modes intact, adds ten new case studies, and sharpens the platform definition: a platform is explicitly one or more teams - a _platform grouping_ - working under a shared mission, rather than necessarily a single team. That matters for larger organisations, because it means the interaction modes apply between the platform's own teams as well as between the platform and its consumers. It also keeps cognitive load as the central design principle, alongside fast flow and humane workplaces.
 
 **The honest caveat.** Team Topologies is a vocabulary and a set of heuristics, not a proof. It is genuinely useful for naming problems - "we are permanently in collaboration mode" is a much sharper diagnosis than "the platform team is overloaded" - and it does not tell you what to build. Being able to use it as a lens rather than as a doctrine is the right register.
 
@@ -110,6 +112,7 @@ Team types in one organisation - and note that most teams are stream-aligned.
 - The precise diagnosis - "the capability is not self-service" rather than "the platform team is overloaded" - is a good illustration of what the vocabulary actually buys you.
 - Cognitive load as the design constraint, with the removal test, connects this to how you would evaluate a capability.
 - Thinnest viable platform, including the possibility that the platform is currently documentation, shows you understand the corrective the book is offering.
+- If you cite the book, know that the second edition (2025) describes a platform as a grouping of one or more teams under a shared mission. It is a current detail that shows you have kept up, and it matters when the question turns to scaling beyond one platform team.
 - Mention Conway's law being used deliberately: design the team structure you want the architecture to reflect.
 - Close with the honest caveat that it is a vocabulary and a set of heuristics rather than a prescription. Treating it as doctrine is a weaker answer than treating it as a lens.
 

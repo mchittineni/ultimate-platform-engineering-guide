@@ -1,6 +1,6 @@
 ---
 title: "How do you build a platform roadmap and say no?"
-id: 129
+id: 248
 category: "Platform Team and Operating Model"
 difficulty: "Advanced"
 tags:
