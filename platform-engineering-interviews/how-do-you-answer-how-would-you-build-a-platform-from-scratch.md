@@ -1,6 +1,6 @@
 ---
 title: "How do you answer 'how would you build a platform from scratch'?"
-id: 133
+id: 261
 category: "Platform Engineering Interviews"
 difficulty: "Advanced"
 tags:

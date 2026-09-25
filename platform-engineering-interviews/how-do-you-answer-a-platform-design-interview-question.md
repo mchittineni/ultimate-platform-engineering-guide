@@ -1,6 +1,6 @@
 ---
 title: "How do you answer a platform design interview question?"
-id: 131
+id: 260
 category: "Platform Engineering Interviews"
 difficulty: "Advanced"
 tags:
@@ -74,22 +74,26 @@ The deletion hazard in particular is a strong volunteer: saying "and I would set
 
   MINUTES 15-30  WORK BACKWARDS TO THE MECHANISM
     accept + validate ...... CRD with schema validation and CEL cross-field rules
-    authorise .............. Kubernetes RBAC, namespaced claims
-    reconcile .............. Crossplane composition (drift corrected, no state file)
+    authorise .............. Kubernetes RBAC on namespaced resources
+    reconcile .............. Crossplane v2 composition of a namespaced composite
+                             resource - no separate claim needed (drift
+                             corrected, no state file)
                              -> TRADE-OFF, volunteered: no first-class plan, so
                                 previewing a change is harder than with Terraform.
                                 Mitigate with staging plus admission policy on
                                 dangerous fields.
-    credentials ............ controller holds the AWS role via IRSA; teams get
+    credentials ............ controller holds the AWS role via EKS Pod Identity
+                             (IRSA remains supported); teams get
                              ZERO AWS permissions
     policy ................. admission for the rules the schema cannot express
                              (size: large needs budget approval)
     observability .......... dashboards, connection metrics, and cost tags
-                             generated from the claim
+                             generated from the resource
 
   MINUTES 30-45  THE FOUR PROBES, VOLUNTEERED NOT EXTRACTED
-    deletion  "deletionPolicy: Orphan on anything stateful, plus admission
-               rejecting deletion of production claims without an explicit
+    deletion  "orphan on delete for anything stateful (managementPolicies
+               without Delete in Crossplane v2), plus admission
+               rejecting deletion of production databases without an explicit
                annotation. Otherwise deleting a namespace destroys a production
                database - which is the sharpest edge of this whole design."
     escape    "Terraform escape in the team's own boundary for anything the five

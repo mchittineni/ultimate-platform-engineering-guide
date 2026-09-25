@@ -1,6 +1,6 @@
 ---
 title: "What should you ask your interviewer about their platform?"
-id: 136
+id: 251
 category: "Platform Engineering Interviews"
 difficulty: "Beginner"
 tags:
@@ -39,6 +39,8 @@ tags:
 
 **Ask about the developer experience they provide, in numbers.** Time to create a new service, time for a new engineer to reach production, lead time. If nobody knows, they are not measuring outcomes - which means you would be joining a team that cannot demonstrate its own value and will struggle to defend its funding.
 
+**Ask how AI assistants and agents use the platform.** Coding assistants and autonomous agents are now platform consumers too - opening pull requests, calling platform APIs, sometimes through Model Context Protocol servers. Whether they act under their own scoped identities and the same policy as humans, or borrow a person's credentials, tells you how deliberately the team is handling the newest class of user.
+
 **Tailor by interviewer.** The hiring manager can answer about roadmap, staffing, and how success is judged. An engineer on the team is the right person to ask about on-call load, the worst part of the job, and what they would fix. Ask an engineer what they would change if they could change one thing - it is the most candid answer you will get in the whole loop.
 
 **Ask about your own first ninety days.** What would success look like, and what is already waiting for you. A clear answer suggests a team that has thought about onboarding; a vague one suggests you will be absorbed into whatever is on fire.
@@ -55,6 +57,7 @@ Tailored by who you are speaking to.
     "Do you have SLOs on platform capabilities, and an error budget policy?"
     "What have you deprecated and removed in the last year?"
     "What did you decide NOT to build, and why?"
+    "How do AI coding assistants and agents use the platform, and under what identity?"
     "What would success look like for me in ninety days?"
 
   TO AN ENGINEER ON THE TEAM  (the most candid answers in the loop)

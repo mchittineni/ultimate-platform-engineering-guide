@@ -1,6 +1,6 @@
 ---
 title: "What does a platform engineering interview loop look like?"
-id: 130
+id: 250
 category: "Platform Engineering Interviews"
 difficulty: "Beginner"
 tags:
@@ -30,7 +30,9 @@ tags:
 
 **Troubleshooting rounds reward method over recall.** The scenario is usually deliberately underspecified, and the interviewer is watching how you narrow the problem: what you would look at first, what you would rule out, what question you would ask. Reaching for a specific tool immediately is a weaker signal than establishing where the failure could be.
 
-**The coding round is usually modest.** Expect a script, an API interaction, a small controller-shaped exercise, or a manifest-generation task rather than algorithmic puzzles. What is being checked is that you write maintainable code, handle errors, and could plausibly build the automation you talk about in the design round.
+**The coding round is usually modest.** Expect a script, an API interaction, a small controller-shaped exercise, a live infrastructure-as-code task, or a manifest-generation task rather than algorithmic puzzles. What is being checked is that you write maintainable code, handle errors, and could plausibly build the automation you talk about in the design round.
+
+**Check the AI assistant policy, and expect a remote loop.** Most loops now run over video with a shared editor or a cloud sandbox, often on a single day or split across a week. Companies differ on AI coding assistants: some ban them in live rounds, some allow them openly, and some design rounds around them to see how you prompt, review, and correct generated code. Ask if it is not stated, and follow it exactly - using an assistant where it is not permitted is usually disqualifying.
 
 **Expect a round about your users, whatever it is called.** Adoption without a mandate, how you version an interface forty teams depend on, how you decide what to build, how you deprecate something people still use. Candidates who are strong technically and have no answer here interview badly for platform roles specifically, because that judgement is the job.
 
