@@ -1,6 +1,6 @@
 ---
 title: "How do you write an architecture decision record for a platform choice?"
-id: 21
+id: 27
 category: "Platform Architecture"
 difficulty: "Beginner"
 tags:
@@ -61,13 +61,13 @@ Facts as of March 2026 - the conditions a future reader should re-check:
 - Terraform state is a single S3 backend with a lock table. Two incidents in six
   months from concurrent applies; blast radius is all resources in the workspace.
 - Platform team is 5 engineers. Three are comfortable with Kubernetes controllers;
-  none want to own a Terraform Enterprise-style runner fleet.
+  none want to own an HCP Terraform-style runner fleet.
 - Resources drift: 9% of database parameter groups differ from the module output,
   because manual console changes are never reconciled back.
 
 ## Options considered
 
-1. **Terraform modules + Atlantis-style PR automation.** Familiar, large ecosystem,
+1. **Terraform (or OpenTofu) modules + Atlantis-style PR automation.** Familiar, large ecosystem,
    and drift can be detected on a schedule. Rejected: run-to-completion means drift
    is corrected only when a plan runs, we still own a runner fleet, and state
    blast radius stays large.
@@ -75,14 +75,14 @@ Facts as of March 2026 - the conditions a future reader should re-check:
    218 state files and a workspace-provisioning problem of its own.
 3. **Crossplane with composite resources.** Continuous reconciliation, resources
    modelled as Kubernetes objects, RBAC and admission control we already run,
-   and claims give teams a small interface. Chosen.
+   and namespaced composite resources (Crossplane v2) give teams a small interface. Chosen.
 4. **Cloud-native service catalogue (AWS Service Catalog).** Rejected: weaker
    interface design, ties the platform API to one provider.
 
 ## Decision
 
 Provision cloud resources through Crossplane composite resources, exposed to teams
-as namespaced claims (`PostgresInstance`, `Queue`, `Bucket`). Terraform is retained
+as namespaced composite resources (`PostgresInstance`, `Queue`, `Bucket`) - no separate claim objects, which Crossplane v2 no longer requires. Terraform is retained
 only for account-level and bootstrap infrastructure that must exist before the
 cluster does.
 
@@ -99,7 +99,7 @@ cluster does.
   on stateful resources plus admission policy - see ADR-0015.
 
 **Benefits expected:** self-service provisioning in minutes; drift corrected
-continuously; per-claim blast radius; one RBAC and policy model for compute and
+continuously; per-resource blast radius; one RBAC and policy model for compute and
 infrastructure.
 
 ## Revisit criteria

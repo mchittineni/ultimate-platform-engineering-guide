@@ -1,6 +1,6 @@
 ---
 title: "How do you design the developer-facing API of a platform?"
-id: 17
+id: 36
 category: "Platform Architecture"
 difficulty: "Advanced"
 tags:
@@ -30,6 +30,8 @@ tags:
 **Model dependencies as references, not embedded copies.** `dependsOn: [component:pricing]` lets you compute blast radius, notify consumers of breaking changes, and build the dependency graph incidents need. Copied configuration cannot be traversed.
 
 **Think about the contract before the schema.** What are you promising? If `slo.availability: 99.9` appears in the interface, you are promising the platform delivers the alerting, dashboards, and error budget accounting for it. Fields imply obligations, and every field you add is one you support indefinitely.
+
+**Design for non-human consumers too.** The same interface is increasingly driven by AI coding assistants and agents, often through an MCP server that exposes platform operations as tools. A small, declarative, strictly validated schema with actionable error messages is exactly what makes that safe - an agent cannot guess its way into thirty provider parameters, and a reviewable desired-state file keeps a human in the loop.
 
 ## Example
 
@@ -75,11 +77,11 @@ The equivalent leaky interface, for contrast. Same outcome, wrong abstraction:
   spec:
     rds:
       engine: postgres
-      engineVersion: "15.4"
+      engineVersion: "17.4"
       instanceClass: db.t4g.small        <- provider-specific, developer must know
       allocatedStorage: 20                  the pricing and performance model
       dbSubnetGroupName: private-b          of one cloud
-      parameterGroupName: pg15-default
+      parameterGroupName: pg17-default
       backupRetentionPeriod: 7
       preferredMaintenanceWindow: "sun:03:00-sun:04:00"
       multiAZ: true

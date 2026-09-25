@@ -1,6 +1,6 @@
 ---
 title: "How do you decide whether to build or buy a platform capability?"
-id: 23
+id: 39
 category: "Platform Architecture"
 difficulty: "Advanced"
 tags:
@@ -47,7 +47,9 @@ CAPABILITY                    DECISION   WHY
   Secret store                 adopt      managed cloud secret manager + CSI driver
   Feature flag engine          buy/adopt  behind an OpenFeature interface, so the
                                           provider is swappable in one adapter
-  Policy engine                adopt      Kyverno; commodity, active project
+  Policy engine                adopt      Kyverno; commodity, active project -
+                                          plus built-in ValidatingAdmissionPolicy
+                                          for simple CEL rules
   GitOps reconciler            adopt      Argo CD; commodity, mature
   Developer portal             buy or     depends on frontend capacity; the catalogue
                                generate   data itself is ours either way

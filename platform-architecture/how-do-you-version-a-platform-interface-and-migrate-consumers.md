@@ -1,6 +1,6 @@
 ---
 title: "How do you version a platform interface and migrate consumers?"
-id: 19
+id: 38
 category: "Platform Architecture"
 difficulty: "Advanced"
 tags:
@@ -61,7 +61,7 @@ spec:
       deprecated: true # kubectl prints a warning on every use
       deprecationWarning: >
         platform.example.com/v1alpha1 Service is deprecated; use v1.
-        spec.db -> spec.dependencies[].postgres. Removal: 2026-10-01.
+        spec.db -> spec.dependencies[].postgres. Removal: 2027-03-01.
         A migration PR has been opened against your repository.
       schema: { openAPIV3Schema: { type: object } } # abbreviated
     - name: v1
@@ -99,7 +99,7 @@ The migration campaign - what the platform team does, not what it asks for:
            v1alpha1 `served: false`. Removed from the CRD one release later.
 
   Elapsed: 10 weeks for 41 consumers, zero broken teams, zero escalations.
-  The alternative - "please migrate by October" - reliably leaves a long tail
+  The alternative - "please migrate by March" - reliably leaves a long tail
   that you support indefinitely.
 ```
 
