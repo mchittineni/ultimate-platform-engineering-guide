@@ -1,6 +1,6 @@
 ---
 title: "How do you structure a GCP platform with folders, projects, and organisation policies?"
-id: 93
+id: 181
 category: "GCP Platform Engineering"
 difficulty: "Advanced"
 tags:
@@ -31,7 +31,7 @@ tags:
 | `compute.requireShieldedVm`            | VMs without integrity monitoring          |
 | `iam.allowedPolicyMemberDomains`       | Granting access to external identities    |
 
-The first is the single most valuable one for a platform: disabling service account key creation forces every workload onto federated identity, which removes a whole class of credential leaks by construction rather than by policy review.
+The first is the single most valuable one for a platform: disabling service account key creation forces every workload onto federated identity, which removes a whole class of credential leaks by construction rather than by policy review. Organisations created on or after 3 May 2024 get it, along with a small set of other secure-by-default constraints, enforced automatically; older organisations have to switch it on. Google is also publishing managed constraints - `iam.managed.disableServiceAccountKeyCreation` and a growing set of `compute.managed.*` constraints - which reimplement the legacy ones on the custom-constraint engine and support dry-run and Policy Simulator, so prefer them where they exist.
 
 **Custom constraints extend this.** Beyond the predefined list, custom organisation policy constraints let you express rules against resource fields - requiring a specific label, forbidding a machine type family - which covers cases you would otherwise have to catch with detective controls.
 
@@ -113,12 +113,12 @@ spec:
 ```yaml
 # A custom constraint - for rules the predefined list does not cover.
 name: organizations/<org-id>/customConstraints/custom.requireCostCentreLabel
+# Custom constraints are per resource type, and the label field name differs
+# by type - so it is one constraint per type, not one for everything.
 resourceTypes:
   - container.googleapis.com/Cluster
-  - sqladmin.googleapis.com/Instance
-  - storage.googleapis.com/Bucket
 methodTypes: [CREATE, UPDATE]
-condition: "has(resource.labels) && 'cost-centre' in resource.labels"
+condition: "has(resource.resourceLabels) && 'cost-centre' in resource.resourceLabels"
 actionType: ALLOW
 displayName: Require a cost-centre label
 description: >

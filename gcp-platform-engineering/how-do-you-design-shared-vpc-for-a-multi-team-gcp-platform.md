@@ -1,6 +1,6 @@
 ---
 title: "How do you design Shared VPC for a multi-team GCP platform?"
-id: 96
+id: 182
 category: "GCP Platform Engineering"
 difficulty: "Advanced"
 tags:
@@ -21,9 +21,9 @@ tags:
 
 **Keep the network administrator role in the host project.** Firewall rules, routes, and subnet creation stay with the platform team. Teams that need a firewall change request it - or better, the platform generates rules from declared dependencies so the request disappears. Handing out firewall administration undoes the reason for centralising the network.
 
-**Plan addresses before you start, and reserve generously.** Subnet ranges must not overlap with each other, with on-premises, or with any peered network. GKE additionally consumes secondary ranges for Pods and Services, and those are sized at cluster creation and awkward to change - Pod range exhaustion limiting cluster growth is a genuinely common and painful problem. Reserve larger secondary ranges than seem necessary.
+**Plan addresses before you start, and reserve generously.** Subnet ranges must not overlap with each other, with on-premises, or with any peered network. GKE additionally consumes secondary ranges for Pods and Services, and those are sized at cluster creation and awkward to change - Pod range exhaustion limiting cluster growth is a genuinely common and painful problem. GKE can now attach additional, discontiguous Pod ranges to an existing cluster (multi-Pod CIDR), which rescues growth - but only if the address plan still has free space to give it. Reserve larger secondary ranges than seem necessary.
 
-**Firewall rules should be identity-based, not address-based.** Rules matching on service accounts rather than IP ranges or network tags survive rescheduling, cannot be borrowed by another workload that happens to acquire a tag, and read as authorisation rather than plumbing. Network tags are convenient and can be applied by anyone who can edit an instance, which makes them a weaker boundary.
+**Firewall rules should be identity-based, not address-based.** Rules matching on service accounts rather than IP ranges or network tags survive rescheduling, cannot be borrowed by another workload that happens to acquire a tag, and read as authorisation rather than plumbing. Network tags are convenient and can be applied by anyone who can edit an instance, which makes them a weaker boundary. For new designs, global network firewall policies with secure tags are the current mechanism: the tags are IAM-governed resources, so binding one to a workload is itself an access-controlled act, and the policy is managed as one object rather than a scattering of VPC rules.
 
 **One host project per environment.** A single host project spanning production and non-production means one firewall misconfiguration can bridge them. Separate host projects for production and non-production, each with its own address space, is the standard and defensible split.
 
@@ -74,7 +74,7 @@ gcloud compute shared-vpc associated-projects add checkout-prod \
 
 # RIGHT - scoped to the one subnet this project should use:
 gcloud compute networks subnets add-iam-policy-binding snet-eu-west1-app \
-  --region eu-west1 --project vpc-host-prod \
+  --region europe-west1 --project vpc-host-prod \
   --role roles/compute.networkUser \
   --member "serviceAccount:$(gcloud projects describe checkout-prod \
       --format='value(projectNumber)')@cloudservices.gserviceaccount.com"
@@ -106,7 +106,9 @@ The two failures that hurt most, both from insufficient planning:
      cluster created with secondary pod range /20 (4,096 addresses)
      each node reserves a /24 (256) by default -> ~16 nodes maximum
      -> the cluster cannot grow, and the secondary range cannot simply be
-        enlarged in place. Remediation is a new cluster and a migration.
+        enlarged in place. Remediation is adding a discontiguous Pod range
+        (multi-Pod CIDR) - if the plan has space left - or a new cluster
+        and a migration.
      -> allocate pod ranges far larger than current need, and consider a smaller
         per-node CIDR if node counts will be high.
 

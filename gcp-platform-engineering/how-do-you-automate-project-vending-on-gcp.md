@@ -1,6 +1,6 @@
 ---
 title: "How do you automate project vending on GCP?"
-id: 98
+id: 179
 category: "GCP Platform Engineering"
 difficulty: "Intermediate"
 tags:
@@ -19,7 +19,7 @@ tags:
 
 **API enablement is GCP-specific and easy to miss.** Services are disabled until enabled per project, so a workload that works in a long-established development project fails in a fresh one with an error about an API not being enabled. Vending should enable a baseline set plus whatever the workload declares, and enabling APIs should be part of the reconciled definition rather than something a developer discovers.
 
-**Quotas are per project and per region, and defaults are often low.** This is the second classic surprise, and it presents as a deployment failing at scale rather than as a configuration problem. Raising the quotas a tier-1 workload will need belongs in vending, and quota requests can take time to approve - which is another reason to do it at creation rather than under pressure.
+**Quotas are per project and per region, and defaults are often low.** This is the second classic surprise, and it presents as a deployment failing at scale rather than as a configuration problem. Raising the quotas a tier-1 workload will need belongs in vending, and quota requests can take time to approve - which is another reason to do it at creation rather than under pressure. The Cloud Quotas API makes this declarative: a `QuotaPreference` resource (also available as a Terraform resource) records the value you want, so quota becomes part of the reconciled project definition rather than a support ticket.
 
 **Folder placement is the security step.** Organisation policies are inherited from the folder, so placing the project under `workloads/prod` is what applies the no-public-IP, no-service-account-keys, region-restriction, and public-access-prevention constraints. A project created in the wrong place is a project without guardrails, and this is worth validating rather than assuming.
 

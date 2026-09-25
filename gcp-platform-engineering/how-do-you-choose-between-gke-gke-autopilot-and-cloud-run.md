@@ -1,6 +1,6 @@
 ---
 title: "How do you choose between GKE, GKE Autopilot, and Cloud Run?"
-id: 95
+id: 178
 category: "GCP Platform Engineering"
 difficulty: "Intermediate"
 tags:
@@ -28,9 +28,9 @@ tags:
 | GPUs with particular driver requirements   | Supported but with constraints |
 | Very fine-grained bin-packing control      | Google decides placement       |
 
-Notably, several of those are exactly what third-party security and observability agents want. Checking whether your required agents run on Autopilot is the practical first step, and it is what most often forces Standard.
+Notably, several of those are exactly what third-party security and observability agents want. Checking whether your required agents run on Autopilot is the practical first step, and it is what most often forces Standard. Two developments soften this: the Autopilot partner programme lets approved vendors ship allowlists so their privileged agents install on Autopilot, and since late 2025 Standard clusters can run workloads in Autopilot mode through compute classes, so the choice is increasingly made per workload rather than per cluster.
 
-**Cloud Run is more capable than people assume.** It runs any container listening on a port, scales to zero, supports concurrency greater than one per instance, handles background and job workloads, integrates with the VPC through connectors or direct egress, and supports per-service identity. For ordinary HTTP services and event consumers it is a smaller operational surface than any cluster, and its scale-to-zero behaviour makes it very cheap for non-production and internal tools.
+**Cloud Run is more capable than people assume.** It runs any container listening on a port, scales to zero, supports concurrency greater than one per instance, runs batch work as jobs and pull-based background consumers as worker pools (GA in April 2026), attaches GPUs to services and jobs, reaches the VPC through Direct VPC egress (preferred over Serverless VPC Access connectors), and supports per-service identity. Cloud Functions is now Cloud Run functions, so functions are simply another way of deploying to Cloud Run. For ordinary HTTP services and event consumers it is a smaller operational surface than any cluster, and its scale-to-zero behaviour makes it very cheap for non-production and internal tools.
 
 **The distinguishing question is whether you need the Kubernetes API.** Not whether you need containers - all three run containers. If your platform is built on custom resources, admission control, Config Connector, or GitOps reconciliation of arbitrary resources, you need a cluster. If your workloads are services and workers and the platform provides its own abstractions, Cloud Run may cover them entirely.
 
@@ -96,7 +96,8 @@ spec:
         autoscaling.knative.dev/minScale: "0" # scale to zero
         autoscaling.knative.dev/maxScale: "100"
         run.googleapis.com/vpc-access-egress: private-ranges-only
-        run.googleapis.com/network-interfaces: '[{"network":"shared-vpc","subnetwork":"snet-run-eu-west1"}]'
+        # Direct VPC egress into a Shared VPC subnet - full resource names.
+        run.googleapis.com/network-interfaces: '[{"network":"projects/vpc-host-prod/global/networks/shared-prod","subnetwork":"projects/vpc-host-prod/regions/europe-west1/subnetworks/snet-eu-west1-run"}]'
     spec:
       # Per-service identity - federated, no key
       serviceAccountName: sa-checkout@checkout-prod.iam.gserviceaccount.com
