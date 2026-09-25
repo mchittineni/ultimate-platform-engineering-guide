@@ -1,6 +1,6 @@
 ---
 title: "How do you design a progressive rollout and its abort criteria?"
-id: 54
+id: 102
 category: "Progressive Delivery and Feature Flags"
 difficulty: "Advanced"
 tags:

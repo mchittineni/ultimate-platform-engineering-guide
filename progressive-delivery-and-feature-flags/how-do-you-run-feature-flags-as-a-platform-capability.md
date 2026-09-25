@@ -1,6 +1,6 @@
 ---
 title: "How do you run feature flags as a platform capability?"
-id: 52
+id: 100
 category: "Progressive Delivery and Feature Flags"
 difficulty: "Advanced"
 tags:
@@ -15,7 +15,7 @@ tags:
 
 ## Detail
 
-**Wrap the provider behind your own interface.** Product teams should import the platform's client, not a vendor SDK. OpenFeature is the natural shape for this - a vendor-neutral evaluation API with a provider behind it - and it means switching providers costs one adapter rather than touching every call site. It is also where you put the defaults that matter: initialisation behaviour, cached last-known-good rules, telemetry on every evaluation, and a safe default when the provider cannot be reached.
+**Wrap the provider behind your own interface.** Product teams should import the platform's client, not a vendor SDK. OpenFeature (a CNCF incubating project) is the natural shape for this - a vendor-neutral evaluation API with a provider behind it, covered in [What is OpenFeature and why does a vendor-neutral flag API matter?](./what-is-openfeature-and-why-does-a-vendor-neutral-flag-api-matter.md) - and it means switching providers costs one adapter rather than touching every call site. It is also where you put the defaults that matter: initialisation behaviour, cached last-known-good rules, telemetry on every evaluation, and a safe default when the provider cannot be reached.
 
 **Make the registry an artefact, not a wiki page.** Each flag has an entry in version control with a named individual owner, a type, the kill-switch trigger, and a dashboard link. Reviewing that entry in a pull request is when the useful conversation happens: does this need to be a flag at all, or would a deploy, a config change, or a role do it?
 
@@ -25,7 +25,7 @@ tags:
 
 **Never gate a security decision on a flag,** particularly not one evaluated client-side. Entitlements and authorisation belong in the authorisation system, where they are enforced server-side and audited. A flag provider is a configuration distribution system, not an access control system.
 
-**Record the served variant in telemetry.** Every request should carry which variant it received as a span attribute or log field - OpenTelemetry has a semantic convention for this, with `feature_flag.key` as the stable core. Without it you cannot attribute a latency regression or an error spike to a variant, which means you cannot safely automate a rollout at all.
+**Record the served variant in telemetry.** Every request should carry which variant it received as a span attribute or log field. OpenTelemetry's feature flag semantic conventions define a `feature_flag.evaluation` event with `feature_flag.key`, `feature_flag.result.variant`, and `feature_flag.provider.name` (the older `feature_flag.variant` and `feature_flag.provider_name` names were renamed); they are at release-candidate rather than stable status, so pin the semantic conventions version your wrapper emits. An OpenFeature hook is the natural place to emit them once for every service. Without it you cannot attribute a latency regression or an error spike to a variant, which means you cannot safely automate a rollout at all.
 
 **Treat a flag flip as a production change.** It changes behaviour without a deploy, so it needs an audit trail, optional four-eyes approval for high-risk flags, and an annotation in your change feed and on your dashboards. Otherwise you cannot correlate an alert with the flip that caused it, and your change failure rate silently excludes your riskiest class of change.
 
@@ -78,7 +78,8 @@ What the wrapper guarantees, so no team has to get these right:
   local evaluation        rules streamed and evaluated in process - no network
                           hop per call, no vendor in the request path
   consistent bucketing    same key + salt everywhere in the estate
-  telemetry               feature_flag.key and the served variant on every span
+  telemetry               feature_flag.key and feature_flag.result.variant on
+                          every evaluation, via one OpenFeature hook
   audit                   every flip recorded with actor, time, and old -> new
 ```
 

@@ -1,6 +1,6 @@
 ---
 title: "How do you test code that sits behind feature flags?"
-id: 59
+id: 98
 category: "Progressive Delivery and Feature Flags"
 difficulty: "Intermediate"
 tags:
@@ -29,7 +29,7 @@ tags:
 
 **Verify the default is safe.** Every flag has a call-site default used when the provider is unreachable. There should be a test that evaluates with the provider unavailable and asserts the safe path is taken - because that behaviour will occur in production eventually and is usually never exercised.
 
-**The platform's contribution.** Provide a test harness that fetches production flag values, a fixture that runs a test body under both states of a named flag, coverage reporting per branch, and a CI gate requiring both. Otherwise each team invents its own approach and most will test only the happy path.
+**The platform's contribution.** Provide a test harness that fetches production flag values (on OpenFeature, an in-memory provider loaded with those values means unit tests need no network and no mocked vendor SDK), a fixture that runs a test body under both states of a named flag, coverage reporting per branch, and a CI gate requiring both. Otherwise each team invents its own approach and most will test only the happy path.
 
 ## Example
 

@@ -1,6 +1,6 @@
 ---
 title: "When do you use a feature flag instead of a canary deployment?"
-id: 56
+id: 97
 category: "Progressive Delivery and Feature Flags"
 difficulty: "Intermediate"
 tags:

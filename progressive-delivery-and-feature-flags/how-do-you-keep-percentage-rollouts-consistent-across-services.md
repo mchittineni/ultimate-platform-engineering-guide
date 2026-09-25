@@ -1,6 +1,6 @@
 ---
 title: "How do you keep percentage rollouts consistent across services?"
-id: 57
+id: 104
 category: "Progressive Delivery and Feature Flags"
 difficulty: "Advanced"
 tags:
@@ -23,7 +23,7 @@ tags:
 - **Different salts.** The same key with a different salt hashes to a different bucket. Since a salt is often per-environment or per-provider-project, this happens quietly when two services are configured against different projects.
 - **Reconstructed context.** A downstream service that looks up the user itself may get a stale or different attribute - a plan tier that changed, a country resolved differently - and evaluate a targeting rule differently.
 
-**Propagate the context; do not rebuild it.** The evaluation context should be established once at the edge and travel with the request as a header, alongside your trace context. Downstream services evaluate flags against the propagated context. This also gives you a single place to enforce that the bucketing key is present and correctly scoped.
+**Propagate the context; do not rebuild it.** The evaluation context should be established once at the edge and travel with the request as a header, alongside your trace context. Downstream services evaluate flags against the propagated context. This also gives you a single place to enforce that the bucketing key is present and correctly scoped. OpenFeature SDKs support this directly with transaction context propagation, and W3C Baggage is a standard carrier if you want the context to ride alongside OpenTelemetry trace context rather than in a bespoke header - keep it to non-sensitive attributes, because baggage travels to every downstream hop.
 
 **Never bucket on session ID for anything user-facing.** A new session means a new bucket, so a user flickers between variants across visits. For experiments this destroys the measurement; for features it looks like an intermittent bug.
 
