@@ -1,6 +1,6 @@
 ---
 title: "How do you find and remove idle platform cost?"
-id: 122
+id: 230
 category: "Platform FinOps"
 difficulty: "Intermediate"
 tags:
@@ -29,10 +29,11 @@ tags:
 | Idle cluster headroom beyond need      | Buffer chosen once, never re-derived                      |
 | Old snapshots and images               | No retention policy                                       |
 | Unused commitments and licences        | Not released when the workload went away                  |
+| Idle GPUs                              | Held for scarcity reasons, allocated but not active       |
 
 **Over-provisioned requests are usually the largest and least visible.** In Kubernetes, a request reserves capacity whether or not it is used, so a service requesting 2 CPU and using 200 millicores is paying for 2 while consuming a tenth of that. Because the pod is healthy, nothing surfaces it. Comparing requests against observed usage at a high percentile across the estate is the highest-value analysis available, and it is often startling the first time.
 
-**Recommend, do not silently right-size.** Automatically reducing requests can cause throttling or eviction for a workload with spiky behaviour. The good pattern is a recommendation with the evidence attached and a pull request the team can review - the platform does the work, the team retains the judgement. For low-tier workloads, automatic adjustment is more defensible.
+**Recommend, do not silently right-size.** Automatically reducing requests can cause throttling or eviction for a workload with spiky behaviour. The good pattern is a recommendation with the evidence attached and a pull request the team can review - the platform does the work, the team retains the judgement. For low-tier workloads, automatic adjustment is more defensible - and less disruptive than it used to be, because in-place pod resize is GA in Kubernetes 1.35 and the Vertical Pod Autoscaler's `InPlaceOrRecreate` mode can change requests without recreating the pod in most cases. See [What is rightsizing?](./what-is-rightsizing.md).
 
 **Non-production out of hours is the easiest large saving.** Development and staging environments running continuously for a workday's use is a large multiple of waste, and scale-to-zero or scheduled shutdown removes most of it. The cost is a cold start for the first person in each morning, which is trivially acceptable.
 
