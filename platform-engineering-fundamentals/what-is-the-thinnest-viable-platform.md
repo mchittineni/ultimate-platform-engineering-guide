@@ -1,6 +1,6 @@
 ---
 title: "What is the thinnest viable platform?"
-id: 5
+id: 7
 category: "Platform Engineering Fundamentals"
 difficulty: "Intermediate"
 tags:
@@ -60,7 +60,7 @@ step is done for the eighth time, automate that step - not the whole platform.
 
 - Attribute the idea to Team Topologies if you can; it shows you know the source of the vocabulary you are using.
 - The strongest version of this answer includes "a platform can legitimately be documentation right now" - it demonstrates you optimise for outcome over artefact.
-- Have the growth stages ready, and tie each transition to a concrete trigger. Vague maturity models are unconvincing; triggers are not.
+- Have the growth stages ready, and tie each transition to a concrete trigger. Vague maturity models are unconvincing; triggers are not. If you do cite a framework, use the [CNCF platform engineering maturity model](./what-is-the-cncf-platform-engineering-maturity-model-and-how-do-you-use-it.md) as a diagnostic, and note that it too warns against treating the top level as the goal.
 - Expect the mirror question - "when has a platform become too thin?" - and answer it with evidence: onboarding time, repeated support questions, and incidents caused by missing defaults.
 
 ---
