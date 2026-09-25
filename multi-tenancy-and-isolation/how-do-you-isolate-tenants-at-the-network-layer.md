@@ -1,6 +1,6 @@
 ---
 title: "How do you isolate tenants at the network layer?"
-id: 27
+id: 46
 category: "Multi-Tenancy and Isolation"
 difficulty: "Intermediate"
 tags:
@@ -27,7 +27,9 @@ tags:
 
 **Identity beats IP addresses.** Pod addresses are ephemeral and reused; a policy based on them is fragile and, worse, can accidentally authorise a different workload that inherits the address. Label selectors within the cluster and mTLS workload identity between services are both identity-based, which is why a mesh's authorisation policy is stronger than an IP allowlist.
 
-**Where a mesh earns its cost.** Native `NetworkPolicy` is L3/L4 - it cannot express "this service may call `GET /v1/prices` but not `POST /v1/prices`". A service mesh adds mTLS, L7 authorisation, and per-call identity. That is genuine capability, paid for in sidecar resource overhead, an extra control plane, and debugging complexity, so it should be justified by a requirement rather than adopted by default.
+**Where a mesh earns its cost.** Native `NetworkPolicy` is L3/L4 - it cannot express "this service may call `GET /v1/prices` but not `POST /v1/prices`". A service mesh adds mTLS, L7 authorisation, and per-call identity. That is genuine capability, paid for in resource overhead, an extra control plane, and debugging complexity, so it should be justified by a requirement rather than adopted by default. The overhead argument has shifted: Istio's ambient mode (GA since Istio 1.24) provides mTLS and L4 authorisation through a per-node proxy with no sidecars, adding L7 waypoint proxies only where a tenant needs them.
+
+**Platform-owned rules tenants cannot override.** Namespaced `NetworkPolicy` is written by whoever controls the namespace, so it cannot express "no tenant may ever reach the cloud metadata endpoint" in a way a tenant cannot undo. CNI-specific cluster-wide policies (Cilium's `CiliumClusterwideNetworkPolicy`, Calico's `GlobalNetworkPolicy`) cover this today. SIG Network is standardising the same idea as `ClusterNetworkPolicy` (which replaced the earlier AdminNetworkPolicy drafts), with `Admin` and `Baseline` tiers evaluated before and after tenant policies; it is still an alpha API, so check your CNI's support before relying on it.
 
 **Generate the policies.** Asking forty teams to hand-write network policies produces either policies that are too permissive or an outage. Since the platform already knows the dependency graph from the service specification, it can generate the allow rules - which means the network policy is correct by construction and updates when the declared dependencies change.
 

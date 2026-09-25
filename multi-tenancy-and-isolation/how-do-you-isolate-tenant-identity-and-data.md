@@ -1,6 +1,6 @@
 ---
 title: "How do you isolate tenant identity and data?"
-id: 28
+id: 51
 category: "Multi-Tenancy and Isolation"
 difficulty: "Advanced"
 tags:
@@ -17,7 +17,7 @@ tags:
 
 **Identity is the boundary that matters most.** Network policy stops a workload reaching something; identity determines what it is allowed to do when it gets there. A tenant with credentials scoped to their own resources is contained even if the network is flat, whereas a tenant with a shared administrative role is uncontained no matter how good the network policy is.
 
-**Per-tenant workload identity, federated rather than stored.** Each tenant's workloads get their own service account, federated to a cloud identity with a trust policy naming that specific service account. No long-lived keys, and the trust policy conditions must be tight - a trust policy that accepts any service account in the cluster is a common and serious mistake, because it lets any tenant assume any role.
+**Per-tenant workload identity, federated rather than stored.** Each tenant's workloads get their own service account, federated to a cloud identity with a trust policy naming that specific service account. No long-lived keys, and the trust policy conditions must be tight - a trust policy that accepts any service account in the cluster is a common and serious mistake, because it lets any tenant assume any role. On EKS, Pod Identity is now the preferred mechanism for new workloads: an explicit association maps one namespace and service account to one role, and the session carries `kubernetes-namespace` and `kubernetes-service-account` tags that permission policies can condition on. IRSA, shown in the example, remains supported and is still common. The equivalents are Workload Identity Federation for GKE and Microsoft Entra Workload ID on AKS.
 
 **Scope authorisation by resource, not just by action.** An IAM policy granting `s3:GetObject` on `*` is not tenant isolation. The policy must be bounded to the tenant's own resources, and the reliable way to achieve that is a naming and tagging convention the platform enforces at provisioning time, so policies can be written against a prefix or a tag condition and cannot accidentally widen.
 

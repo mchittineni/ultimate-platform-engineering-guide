@@ -1,6 +1,6 @@
 ---
 title: "How do you design tenant onboarding and offboarding?"
-id: 29
+id: 52
 category: "Multi-Tenancy and Isolation"
 difficulty: "Advanced"
 tags:
@@ -17,7 +17,7 @@ tags:
 
 **One declaration, many derived resources.** A tenant should be an object, not a runbook. Declaring `kind: Tenant` with a name, an owning group, a tier, and a budget should produce everything downstream. The runbook approach fails not because it cannot work once, but because step seven of fourteen gets skipped occasionally and you have no way to detect which tenants are incomplete.
 
-**Reconciliation is what makes it trustworthy.** A controller that continuously converges the tenant's derived resources gives you two properties a script cannot: a tenant created eighteen months ago gains new baseline policies automatically, and a resource deleted by hand is restored. Onboarding becomes a property rather than an event.
+**Reconciliation is what makes it trustworthy.** A controller that continuously converges the tenant's derived resources gives you two properties a script cannot: a tenant created eighteen months ago gains new baseline policies automatically, and a resource deleted by hand is restored. Onboarding becomes a property rather than an event. You rarely need to write that controller from scratch: a Crossplane v2 composition (whose namespaced composite resources can include any Kubernetes resource) or a kro ResourceGraphDefinition can define `Tenant` as an API and fan it out into the derived objects.
 
 **What onboarding must produce:** the namespace or project, resource quotas and limit ranges, the default-deny network policy plus baseline allows, workload identity and its scoped authorisation, secret store paths and access policy, a budget and cost tags, the catalogue entry with a validated owner, alert routing to the right rotation, log and metric destinations with retention, repository access, and the golden-path scaffolding.
 

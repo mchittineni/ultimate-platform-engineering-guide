@@ -1,6 +1,6 @@
 ---
 title: "When do you give a tenant its own cluster instead of a namespace?"
-id: 25
+id: 49
 category: "Multi-Tenancy and Isolation"
 difficulty: "Advanced"
 tags:
@@ -33,9 +33,9 @@ tags:
 
 **The bad reasons, which come up constantly:** "the team wants isolation" without a stated requirement; "we had a noisy neighbour once" - dedicated node pools solve that far more cheaply; "production must be separate" - true, but that is an environment boundary you already have; and "it is easier than getting RBAC right", which trades a solvable configuration problem for a permanent operational one.
 
-**Consider the cheaper intermediate steps first.** Dedicated node pools with taints and tolerations handle resource contention and give a node-level boundary. Virtual control planes - vcluster and similar - give a tenant their own API server and CRD space on shared nodes, which covers the "they need cluster-scoped resources" case without a real cluster. Sandboxed runtimes cover untrusted code. Reaching for a full cluster before trying these is the common overcorrection.
+**Consider the cheaper intermediate steps first.** Dedicated node pools with taints and tolerations handle resource contention and give a node-level boundary. Virtual control planes - vcluster and similar - give a tenant their own API server and CRD space on shared nodes, which covers the "they need cluster-scoped resources" case without a real cluster (see [How do virtual clusters change the tenancy trade-off?](./how-do-virtual-clusters-change-the-tenancy-trade-off.md)). Sandboxed runtimes cover untrusted code. Reaching for a full cluster before trying these is the common overcorrection.
 
-**If you do run many clusters, the answer changes shape.** Beyond a handful, you need fleet management as a first-class capability: a cluster API or provider-managed lifecycle, one place that defines what every cluster must contain, per-cluster reconciliation from a shared definition, and a cluster inventory. Fleets built ad hoc become unupgradeable, which is how organisations end up with clusters three versions behind.
+**If you do run many clusters, the answer changes shape.** Beyond a handful, you need fleet management as a first-class capability: a cluster API or provider-managed lifecycle, one place that defines what every cluster must contain, per-cluster reconciliation from a shared definition, and a cluster inventory. In practice that means Cluster API or the provider's own fleet tooling - GKE fleets, Azure Kubernetes Fleet Manager, or EKS with a GitOps hub such as Argo CD 3.x or Flux - rather than bespoke scripts. Fleets built ad hoc become unupgradeable, which is how organisations end up with clusters three versions behind.
 
 ## Example
 
