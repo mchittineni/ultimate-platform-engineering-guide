@@ -1,6 +1,6 @@
 ---
 title: "How do you stop ephemeral environments becoming a cost problem?"
-id: 64
+id: 113
 category: "Environments and Ephemeral Infrastructure"
 difficulty: "Intermediate"
 tags:
