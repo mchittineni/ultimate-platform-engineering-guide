@@ -1,6 +1,6 @@
 ---
 title: "How do you model a platform API with Kubernetes custom resources?"
-id: 39
+id: 75
 category: "Control Planes and Abstractions"
 difficulty: "Advanced"
 tags:
@@ -28,6 +28,8 @@ tags:
 **Namespaced by default.** Namespacing gives you RBAC per team, quota by object count, and a natural tenancy boundary. Cluster-scoped resources are for genuinely cluster-wide concerns - a `Tenant` or a `ClusterPolicy` - and are much harder to delegate safely.
 
 **Design deletion at the same time as creation.** Owner references give you cascading deletion of derived objects for free. Finalizers let you clean up external systems before the object disappears - and are also where controllers deadlock, blocking namespace deletion indefinitely, so a documented escape route is part of the design rather than an afterthought.
+
+**You may not need to write the controller.** If the API only composes existing resources, a composition engine can generate the CRD and the reconciler for you: Crossplane v2 composite resources are namespaced by default and can include any Kubernetes resource, and kro generates a CRD and controller from a single ResourceGraphDefinition. The design rules above still apply to the schema you expose; only the Go code disappears.
 
 **Do not put high-churn data in status.** Every status write is an etcd write, and a controller updating status every few seconds across thousands of objects will degrade the cluster. Status is for state that changes when something meaningful happens; metrics and progress counters belong in your metrics system.
 

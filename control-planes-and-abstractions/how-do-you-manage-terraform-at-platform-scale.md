@@ -1,6 +1,6 @@
 ---
 title: "How do you manage Terraform at platform scale?"
-id: 41
+id: 76
 category: "Control Planes and Abstractions"
 difficulty: "Advanced"
 tags:
@@ -15,11 +15,11 @@ tags:
 
 ## Detail
 
-**State layout is the decision that matters most.** Split along blast radius and change frequency: account and organisation foundations change rarely and should be isolated; network foundations similarly; per-environment and per-service resources change often and should each have their own state. A useful rule is that a state file should contain resources you would be willing to `destroy` together. If the answer is "never all of these", split it.
+**State layout is the decision that matters most.** Split along blast radius and change frequency: account and organisation foundations change rarely and should be isolated; network foundations similarly; per-environment and per-service resources change often and should each have their own state. A useful rule is that a state file should contain resources you would be willing to `destroy` together. If the answer is "never all of these", split it. Every state needs a locking backend; on S3 that is now native (`use_lockfile = true`), so the separate DynamoDB lock table is no longer needed.
 
 **Cross-state references should be loose.** Reading another state directly with a remote state data source couples them tightly - the consumer breaks when the producer's internals change. Prefer passing identifiers explicitly, or discovering them by tag or from a parameter store, so the contract between layers is a small set of named values rather than someone else's whole state.
 
-**Modules are products with consumers.** Version them with tags, pin consumers to versions - never a branch - and treat a breaking change the way you would any platform interface change: a new major version, a migration path, and pull requests raised for consumers. Give each module tests, ideally with a tool that provisions and destroys real resources in a sandbox account, plus static checks for security and cost. A module without tests silently breaks forty consumers.
+**Modules are products with consumers.** Version them with tags, pin consumers to versions - never a branch - and treat a breaking change the way you would any platform interface change: a new major version, a migration path, and pull requests raised for consumers. Give each module tests, ideally ones that provision and destroy real resources in a sandbox account - the built-in `terraform test` (or `tofu test`) framework now covers this without extra tooling - plus static checks for security and cost. A module without tests silently breaks forty consumers.
 
 **Automation, always, with the plan on the pull request.** The workflow is: change opened, plan runs automatically, the plan is posted as a comment for review, approval merges, apply runs from the main branch. This gives you the reviewable diff that is Terraform's main advantage over reconciling controllers, an audit trail, and no drift between what was reviewed and what was applied. Local applies are how state gets corrupted and how changes reach production unreviewed.
 
@@ -28,6 +28,8 @@ tags:
 **Detect drift on a schedule, because Terraform will not tell you otherwise.** A nightly plan across all workspaces, reporting any non-empty diff, is how you find console changes before they collide with a real deployment. Without it, drift surfaces as a surprising destroy in an unrelated change - which is how teams learn to distrust the tool.
 
 **Protect against the plans that destroy things.** Require explicit approval for any plan containing a destroy or replace of a stateful resource, use `prevent_destroy` lifecycle rules on databases and buckets, and make destructive plans visibly different in review rather than a line buried in 400 lines of output.
+
+**Pick the binary deliberately.** Since the 2023 licence change, Terraform (BSL, owned by IBM since 2025) and OpenTofu (MPL, a CNCF project) share HCL and providers but are diverging on features. At platform scale, standardise on one, pin its version in CI images, and keep shared modules to the common subset if consumers may use either.
 
 **Where Terraform should stop.** At platform scale, Terraform is usually best for foundations - accounts, networks, clusters, the things that must exist before anything else - while the high-frequency, per-team resource requests are better served by a reconciling control plane with a self-service interface. Keeping Terraform for the bootstrap layer and putting a claims-based API in front of the rest avoids building a pipeline-plus-portal wrapper to make Terraform self-service.
 
@@ -85,7 +87,9 @@ jobs:
           role-to-assume: arn:aws:iam::<account-id>:role/terraform-plan # read-only
           aws-region: eu-west-1
       - run: terraform init && terraform plan -out=tfplan -no-color
-      - run: terraform show -json tfplan > plan.json
+      - run: |
+          terraform show -json tfplan > plan.json
+          terraform show -no-color tfplan > plan.txt
       # Fail the check on destructive changes so they cannot be merged casually;
       # a labelled override exists for the cases where a destroy is intended.
       - name: Block undeclared destroys
