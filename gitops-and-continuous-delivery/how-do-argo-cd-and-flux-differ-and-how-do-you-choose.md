@@ -1,6 +1,6 @@
 ---
 title: "How do Argo CD and Flux differ, and how do you choose?"
-id: 45
+id: 84
 category: "GitOps and Continuous Delivery"
 difficulty: "Intermediate"
 tags:
@@ -15,17 +15,17 @@ tags:
 
 ## Detail
 
-**The architectural difference that drives everything else.** Argo CD is one application with a server, a repository service, a controller, and a web UI, organised around the `Application` resource. Flux is a family of small controllers - source, kustomize, helm, notification, image automation - each doing one job and composed by the user. Argo CD gives you a product; Flux gives you components.
+**The architectural difference that drives everything else.** Argo CD is one application with a server, a repository service, a controller, and a web UI, organised around the `Application` resource. Flux is a family of small controllers - source, kustomize, helm, notification, image automation - each doing one job and composed by the user. Argo CD gives you a product; Flux gives you components. Both are on mature major lines as of 2026 - Argo CD 3.x and Flux 2.x - and both have moved towards each other: Argo CD's source hydrator (for committing rendered manifests) has matured through the 3.x releases and ApplicationSet progressive syncs reached beta in 3.3, while the Flux Operator now ships a web UI with SSO, and Flux 2.8 moved its helm-controller to Helm 4 with server-side apply.
 
 **The comparison as it actually affects a decision:**
 
 | Dimension            | Argo CD                                    | Flux                                               |
 | -------------------- | ------------------------------------------ | -------------------------------------------------- |
-| UI                   | First-class, a major reason people pick it | None official; use CLI or third-party              |
+| UI                   | First-class, a major reason people pick it | Flux Operator Web UI (newer, lighter); or CLI      |
 | Model                | `Application` / `ApplicationSet`           | `GitRepository` + `Kustomization` / `HelmRelease`  |
 | Multi-tenancy        | Projects, SSO, RBAC in the product         | Namespace-scoped resources plus cluster RBAC       |
 | Fleet management     | `ApplicationSet` generators                | Per-cluster resources, often plus a bootstrap repo |
-| Image updates        | Separate image updater component           | Built-in image automation controller               |
+| Image updates        | Separate Argo CD Image Updater project     | Image automation controllers (GA since Flux 2.7)   |
 | Progressive delivery | Argo Rollouts (same family)                | Flagger (same family)                              |
 | Footprint            | Larger, one system to run                  | Smaller controllers, more pieces                   |
 | API-first ergonomics | Good, UI often the primary interface       | Excellent - everything is a custom resource        |
@@ -36,7 +36,7 @@ tags:
 
 **Multi-tenancy differs in kind.** Argo CD's projects give you a product-level tenancy model with SSO integration and per-project permissions, typically with one Argo CD serving many teams. Flux relies on Kubernetes-native tenancy - namespaced resources, service account impersonation, standard RBAC - which is cleaner conceptually but means you build the human-facing access story yourself.
 
-**The things people wrongly believe are differentiators.** Both support Helm, Kustomize, and plain manifests. Both support multi-cluster. Both have health assessment, drift detection, and self-healing. Both are CNCF graduated with active communities. Anyone claiming one supports Helm and the other does not is out of date.
+**The things people wrongly believe are differentiators.** Both support Helm, Kustomize, plain manifests, and OCI artefacts as a source. Both support multi-cluster. Both have health assessment, drift detection, and self-healing. Both are CNCF graduated with active communities. Anyone claiming one supports Helm and the other does not is out of date. So is "Flux has no UI at all" - the gap is now maturity and depth of the UI, not its existence.
 
 **Running both is a real anti-pattern.** It happens through team-by-team adoption and leaves you with two reconcilers, two mental models, two upgrade treadmills, and occasionally two things fighting over the same resource. Pick one for the organisation; that decision is more valuable than the choice itself.
 

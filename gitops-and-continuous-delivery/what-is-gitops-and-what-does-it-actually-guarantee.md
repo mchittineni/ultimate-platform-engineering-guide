@@ -1,6 +1,6 @@
 ---
 title: "What is GitOps and what does it actually guarantee?"
-id: 44
+id: 79
 category: "GitOps and Continuous Delivery"
 difficulty: "Beginner"
 tags:
