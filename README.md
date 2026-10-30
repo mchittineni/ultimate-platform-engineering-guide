@@ -11,7 +11,7 @@ Every answer gives you a short answer you can say out loud, the detail and trade
 [![Validate](https://github.com/mchittineni/ultimate-platform-engineering-guide/actions/workflows/validate-and-format.yml/badge.svg)](https://github.com/mchittineni/ultimate-platform-engineering-guide/actions/workflows/validate-and-format.yml)
 ![Questions](https://img.shields.io/badge/questions-262-blue)
 ![Topics](https://img.shields.io/badge/topics-20-blueviolet)
-![Difficulty](https://img.shields.io/badge/difficulty-🟢%2011%20·%20🟡%2056%20·%20🔴%2069-lightgrey)
+![Difficulty](https://img.shields.io/badge/difficulty-🟢%20100%20·%20🟡%2082%20·%20🔴%2080-lightgrey)
 ![License](https://img.shields.io/badge/license-MIT-green)
 [![PRs welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](CONTRIBUTING.md)
 
